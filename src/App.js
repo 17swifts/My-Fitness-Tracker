@@ -10,16 +10,14 @@ import ExerciseLibrary from './components/ExerciseLibrary';
 import ScheduleWorkout from './components/ScheduleWorkout';
 import LogWorkout from './components/LogWorkout';
 import Statistics from './components/Statistics';
-import Timer from './components/Timer';
-import Equipment from './components/Equipment';
 import DashboardPage from './components/DashboardPage';
 import CalendarView from './components/CalendarView';
 import WorkoutPlans from './components/WorkoutPlans';
 import { auth } from './firebase';
 
 const App = () => {
+  const [value, setValue] = React.useState(0);
   const [user, setUser] = useState(null);
-  const [value, setValue] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,9 +27,16 @@ const App = () => {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
+  const handleLogout = async () => {
+    await auth.signOut();
+    setUser(null);
+    navigate('/signup');
+  };
+
+  const handleBottomNavChange = (event, newValue) => {
+    setValue(newValue);
     if (user) {
-      switch (value) {
+      switch (newValue) {
         case 0:
           navigate('/dashboard');
           break;
@@ -47,11 +52,9 @@ const App = () => {
         case 4:
           navigate('/profile');
           break;
-        default:
-          navigate('/dashboard');
       }
     }
-  }, [value, navigate, user]);
+  };
 
   return (
     <div>
@@ -63,12 +66,17 @@ const App = () => {
           </Typography>
           {!user && (
             <Button color="inherit" onClick={() => navigate('/signup')}>
-              Sign Up / Login
+              Login
+            </Button>
+          )}
+          {user && (
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
             </Button>
           )}
         </Toolbar>
       </AppBar>
-      <Container>
+      <Container className="content-container">
         <Routes>
           <Route path="/signup" element={<SignUp />} />
           {user ? (
@@ -82,8 +90,6 @@ const App = () => {
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
               <Route path="/schedule-workout" element={<ScheduleWorkout />} />
               <Route path="/log-workout" element={<LogWorkout />} />
-              <Route path="/timer" element={<Timer />} />
-              <Route path="/equipment" element={<Equipment />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </>
           ) : (
@@ -94,7 +100,7 @@ const App = () => {
       {user && (
         <BottomNavigation
           value={value}
-          onChange={(event, newValue) => setValue(newValue)}
+          onChange={handleBottomNavChange}
           showLabels
           style={{ position: 'fixed', bottom: 0, width: '100%' }}
         >

@@ -35,3 +35,7 @@ code {
 .App-link {
   color: #61dafb;
 }
+
+.content-container {
+  padding-bottom: 60px; /* Adjust based on the height of your Bottom Navigation */
+}

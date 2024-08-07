@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Container, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 
 const Profile = () => {
   const [userProfile, setUserProfile] = useState(null);
@@ -44,7 +44,7 @@ const Profile = () => {
   }
 
   return (
-    <Container maxWidth="sm">
+    <Box p={3}>
       <Typography variant="h4" gutterBottom>
         User Profile
       </Typography>
@@ -61,7 +61,7 @@ const Profile = () => {
       ) : (
         <Typography>No profile information available</Typography>
       )}
-    </Container>
+    </Box>
   );
 };
 
