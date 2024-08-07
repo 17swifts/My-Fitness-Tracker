@@ -13,6 +13,7 @@ import Statistics from './components/Statistics';
 import DashboardPage from './components/DashboardPage';
 import CalendarView from './components/CalendarView';
 import WorkoutPlans from './components/WorkoutPlans';
+import WorkoutPlanDetail from './components/WorkoutPlanDetail';
 import { auth } from './firebase';
 
 const App = () => {
@@ -84,6 +85,7 @@ const App = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/calendar" element={<CalendarView />} />
               <Route path="/workout-plans" element={<WorkoutPlans />} />
+              <Route path="/workout-plans/:id" element={<WorkoutPlanDetail />} />
               <Route path="/statistics" element={<Statistics />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/create-workout-plan" element={<CreateWorkoutPlan />} />

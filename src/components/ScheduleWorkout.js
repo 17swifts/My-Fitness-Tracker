@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { auth, firestore } from '../firebase';
-import { Button, TextField, Container, Typography } from '@mui/material';
+import { Button, TextField, Box, Typography } from '@mui/material';
 
-const ScheduleWorkout = () => {
+const ScheduleWorkout = ({ workoutId }) => {
   const [workoutDate, setWorkoutDate] = useState('');
 
   const handleScheduleWorkout = async () => {
@@ -12,6 +12,8 @@ const ScheduleWorkout = () => {
         await firestore.collection('scheduledWorkouts').add({
           userId: user.uid,
           workoutDate,
+          workoutId,
+          isComplete: false,
         });
         setWorkoutDate('');
       }
@@ -21,21 +23,23 @@ const ScheduleWorkout = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" gutterBottom>
+    <Box>
+      <Typography variant="h6" gutterBottom>
         Schedule Workout
       </Typography>
       <TextField
         label="Workout Date"
+        type="date"
         value={workoutDate}
         onChange={(e) => setWorkoutDate(e.target.value)}
         fullWidth
         margin="normal"
+        InputLabelProps={{ shrink: true }}
       />
       <Button variant="contained" color="primary" onClick={handleScheduleWorkout}>
         Schedule Workout
       </Button>
-    </Container>
+    </Box>
   );
 };
 

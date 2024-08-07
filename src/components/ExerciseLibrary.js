@@ -1,18 +1,18 @@
-// src/components/ExerciseLibrary.js
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import { collection, query, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';  // Custom hook to get current user
-import { TextField, Select, MenuItem, Button, Container, Typography, Grid, IconButton } from '@mui/material';
+import { TextField, Select, MenuItem, Button, Typography, Grid, IconButton, Box } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import './styles/ExerciseLibrary.css';
 
-const ExerciseLibrary = ({ onSelectExercise }) => {
+const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
   const [exercises, setExercises] = useState([]);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('');
   const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: '', imageUrl: '', videoUrl: '' });
+  const [selectedExercise, setSelectedExercise] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const ExerciseLibrary = ({ onSelectExercise }) => {
   );
 
   return (
-    <Container className='content-container'>
+    <Box sx={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto', p: 4 }}>
       <Typography variant="h4" gutterBottom>
         Exercise Library
         <IconButton color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)}>
@@ -73,12 +73,11 @@ const ExerciseLibrary = ({ onSelectExercise }) => {
       <Grid container spacing={3} style={{ marginTop: 20 }}>
         {filteredExercises.map((exercise, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Typography variant="h6">{exercise.name}</Typography>
-            <img src={exercise.imageUrl} alt={exercise.name} style={{ width: '100%' }} />
-            <Typography variant="body2">{exercise.muscleGroup}</Typography>
-            <Button variant="contained" onClick={() => onSelectExercise(exercise)}>
-              Add to Plan
-            </Button>
+            <Box onClick={() => setSelectedExercise(exercise)} sx={{ border: selectedExercise?.id === exercise.id ? '2px solid blue' : 'none', padding: '8px', cursor: 'pointer' }}>
+              <Typography variant="h6">{exercise.name}</Typography>
+              <img src={exercise.imageUrl} alt={exercise.name} style={{ width: '60%' }} />
+              <Typography variant="body2">{exercise.muscleGroup}</Typography>
+            </Box>
           </Grid>
         ))}
       </Grid>
@@ -88,16 +87,23 @@ const ExerciseLibrary = ({ onSelectExercise }) => {
           <TextField label="Muscle Group" value={newExercise.muscleGroup} onChange={(e) => setNewExercise({ ...newExercise, muscleGroup: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
           <TextField label="Image URL" value={newExercise.imageUrl} onChange={(e) => setNewExercise({ ...newExercise, imageUrl: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
           <TextField label="Video URL" value={newExercise.videoUrl} onChange={(e) => setNewExercise({ ...newExercise, videoUrl: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
-          <Button variant="contained" color="primary" type="submit" >
+          <Button variant="contained" color="primary" type="submit">
             Add Exercise
           </Button>
-          <Button variant="contained" color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)} >
+          <Button variant="contained" color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)}>
             Cancel
           </Button>
         </form>
       )}
-
-    </Container>
+      <Button variant="contained" color="primary" onClick={onClose} style={{ marginTop: 20 }}>
+        Back
+      </Button>
+      {selectedExercise && (
+        <Button variant="contained" color="primary" onClick={() => onSelectExercise(selectedExercise)} style={{ marginTop: 20 }}>
+          Add
+        </Button>
+      )}
+    </Box>
   );
 };
 

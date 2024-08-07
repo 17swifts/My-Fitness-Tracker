@@ -7,7 +7,7 @@ const LogWorkout = () => {
 
   useEffect(() => {
     const fetchWorkout = async () => {
-      const workoutDoc = await firestore.collection('workoutSchedules').doc('workoutId').get();
+      const workoutDoc = await firestore.collection('scheduledWorkouts').doc('workoutId').get();
       setWorkout(workoutDoc.data());
     };
 
@@ -18,7 +18,7 @@ const LogWorkout = () => {
     const newExercises = [...workout.exercises];
     newExercises[exerciseIndex].reps = reps;
     newExercises[exerciseIndex].weight = weight;
-    await firestore.collection('workoutSchedules').doc('workoutId').update({
+    await firestore.collection('scheduledWorkouts').doc('workoutId').update({
       exercises: newExercises,
     });
   };

@@ -17,6 +17,7 @@ const WorkoutPlans = () => {
           const q = query(collection(firestore, 'workoutPlans'), where('userId', '==', user.uid));
           const querySnapshot = await getDocs(q);
           const plans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          console.log(plans);
           setWorkoutPlans(plans);
         }
       } catch (error) {
@@ -36,6 +37,36 @@ const WorkoutPlans = () => {
     }
   };
 
+  const countSuperSets = (plan) => {
+    if (!plan || !Array.isArray(plan.setGroups)) {
+      throw new Error("Invalid plan structure");
+    }
+
+    let count = 0;
+    plan.setGroups.forEach((group) => {
+      if (group.sets && group.sets.length > 1) {
+        count++;
+      }
+    });
+
+    return count;
+  };
+
+  const countRegularSets = (plan) => {
+    if (!plan || !Array.isArray(plan.setGroups)) {
+      throw new Error("Invalid plan structure");
+    }
+
+    let count = 0;
+    plan.setGroups.forEach((group) => {
+      if (group.sets && group.sets.length === 1) {
+        count++;
+      }
+    });
+
+    return count;
+  };
+
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
@@ -51,11 +82,11 @@ const WorkoutPlans = () => {
       </Button>
       <List>
         {workoutPlans.map((plan) => (
-          <ListItem key={plan.id} button>
+          <ListItem key={plan.id} button onClick={() => navigate(`/workout-plans/${plan.id}`)}>
             <ListItemText
-              primary={plan.planName}
-              secondary={plan.exercises && plan.exercises.length > 0 
-                ? `Includes ${plan.exercises.length} exercises` 
+              primary={plan.name}
+              secondary={plan.setGroups && plan.setGroups.length > 0 
+                ? `Includes ${countRegularSets(plan)} exercise(s) and ${countSuperSets(plan)} super set(s)` 
                 : 'No exercises added'}
             />
             <ListItemSecondaryAction>

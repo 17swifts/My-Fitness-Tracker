@@ -1,0 +1,121 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Box, Button, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { firestore } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import ScheduleWorkout from './ScheduleWorkout';
+
+const WorkoutPlanDetail = () => {
+  const { id } = useParams();
+  const [workoutPlan, setWorkoutPlan] = useState(null);
+  const [exercises, setExercises] = useState({});
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchWorkoutPlan = async () => {
+      try {
+        const docRef = doc(firestore, 'workoutPlans', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const planData = { id: docSnap.id, ...docSnap.data() };
+          setWorkoutPlan(planData);
+          fetchExerciseDetails(planData);
+        } else {
+          console.log('No such document!');
+        }
+      } catch (error) {
+        console.error('Error fetching workout plan:', error);
+      }
+    };
+
+    const fetchExerciseDetails = async (planData) => {
+      try {
+        const exerciseIds = new Set();
+        planData.setGroups.forEach(group => {
+          group.sets.forEach(set => {
+            exerciseIds.add(set.exerciseId);
+          });
+        });
+
+        const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
+          const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
+          return { id: exerciseId, data: exerciseDoc.data() };
+        });
+
+        const exerciseResults = await Promise.all(exercisePromises);
+        const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
+          acc[id] = data;
+          return acc;
+        }, {});
+        console.log(exerciseData);
+        setExercises(exerciseData);
+      } catch (error) {
+        console.error('Error fetching exercises:', error);
+      }
+    };
+
+    fetchWorkoutPlan();
+  }, [id]);
+
+  if (!workoutPlan) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  return (
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom>
+        {workoutPlan.name}
+      </Typography>
+      <List>
+        {workoutPlan.setGroups.map((group, index) => (
+          <React.Fragment key={index}>
+            {group.isSuperSet && (
+              <ListItem>
+                <ListItemText
+                  primary={`Super Set of ${group.number} sets`}
+                  secondary={group.sets.map((set, setIndex) => (
+                    <Box key={setIndex} mb={2}>
+                      {exercises[set.exerciseId] && (
+                        <>
+                          <Typography>{exercises[set.exerciseId].name}</Typography>
+                          <img src={exercises[set.exerciseId].imageUrl} alt={exercises[set.exerciseId].name} style={{ width: '60%' }} />
+                        </>
+                      )}
+                      <Typography>Reps: {set.reps}</Typography>
+                    </Box>
+                  ))}
+                />
+              </ListItem>
+            )}
+            {!group.isSuperSet && (
+              <ListItem>
+                <ListItemText
+                  primary={''}
+                  secondary={group.sets.map((set, setIndex) => (
+                    <Box key={setIndex} mb={2}>
+                      {exercises[set.exerciseId] && (
+                        <>
+                          <Typography>{exercises[set.exerciseId].name}</Typography>
+                          <img src={exercises[set.exerciseId].imageUrl} alt={exercises[set.exerciseId].name} style={{ width: '60%' }} />
+                        </>
+                      )}
+                      <Typography>Sets: {set.number}</Typography>
+                      <Typography>Reps: {set.reps}</Typography>
+                    </Box>
+                  ))}
+                />
+              </ListItem>
+            )}
+            <Divider />
+          </React.Fragment>
+        ))}
+      </List>
+      <Button variant="contained" color="primary" onClick={() => navigate('/workout-plans')}>
+        Back to Workout Plans
+      </Button>
+      <ScheduleWorkout workoutId={id} />
+    </Box>
+  );
+};
+
+export default WorkoutPlanDetail;
