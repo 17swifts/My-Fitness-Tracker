@@ -1,13 +1,132 @@
-import React from 'react';
-import { Typography, Box } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Typography, Box, List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
+import { auth, firestore } from '../firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import dayjs from 'dayjs';
+import './styles/CalendarView.css';
 
 const CalendarView = () => {
+  const [scheduledWorkouts, setScheduledWorkouts] = useState([]);
+  const [workoutNames, setWorkoutNames] = useState({});
+  const [activities, setActivities] = useState({});
+  const [dates, setDates] = useState([]);
+
+  useEffect(() => {
+    const fetchScheduledWorkouts = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const q = query(collection(firestore, 'scheduledWorkouts'), where('userId', '==', user.uid));
+          const querySnapshot = await getDocs(q);
+          const workouts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setScheduledWorkouts(workouts);
+
+          const workoutIds = [...new Set(workouts.map(workout => workout.workoutId))];
+          const names = {};
+          for (const workoutId of workoutIds) {
+            const docRef = doc(firestore, 'workoutPlans', workoutId);
+            const workoutDoc = await getDoc(docRef);
+            if (workoutDoc.exists()) {
+              names[workoutId] = workoutDoc.data().name;
+            }
+          }
+          setWorkoutNames(names);
+
+          // Mock activities, replace this with your API fetching logic
+          setActivities({
+            "2024-08-14": [{ type: 'exercise', name: 'Walking', completed: true }],
+            "2024-08-10": [{ type: 'meals', name: '3 Meals Added', completed: false }]
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching scheduled workouts:', error);
+      }
+    };
+
+    // Generate past 2 weeks' dates
+    const generatePastTwoWeeksDates = () => {
+      const today = dayjs();
+      const datesArray = [];
+
+      for (let i = 7; i >= 0; i--) {
+        datesArray.push(today.subtract(i, 'day').format('YYYY-MM-DD'));
+      }
+      for (let i = 1; i < 15; i++) {
+        datesArray.push(today.add(i, 'day').format('YYYY-MM-DD'));
+      }
+      console.log(datesArray);
+
+      setDates(datesArray);
+    };
+
+    fetchScheduledWorkouts();
+    generatePastTwoWeeksDates();
+  }, []);
+
+  const renderActivities = (date) => {
+    const dateActivities = activities[date] || [];
+    return dateActivities.map((activity, index) => (
+      <ListItem className="list-item" >
+        <ListItemIcon className={`list-item-icon ${activity.completed ? 'completed-icon' : 'incomplete-icon'}`}>
+          {activity.completed ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
+        </ListItemIcon>
+        <ListItemText
+          className="list-item-text"
+          primary={activity.name}
+          secondary={activity.type === 'exercise' ? 'Completed' : `Calories: 1800`} // Example secondary text
+        />
+        {activity.type === 'exercise' && <FitnessCenterIcon className="activity-icon"/>}
+        {activity.type === 'meals' && <RestaurantIcon className="activity-icon"/>}
+      </ListItem>
+    ));
+  };
+
+  const renderWorkoutForDate = (date) => {
+    const workoutsForDate = scheduledWorkouts.filter(workout => workout.date === date);
+    if (workoutsForDate.length > 0) {
+      return workoutsForDate.map((workout) => (
+        <ListItem className="list-item" key={workout.id}>
+          <ListItemIcon className={`list-item-icon ${workout.completed ? 'completed-icon' : 'incomplete-icon'}`}>
+            {workout.completed ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
+          </ListItemIcon>
+          <ListItemText
+            primary={workoutNames[workout.workoutId] || `Workout ID: ${workout.workoutId}`}
+            secondary={workout.completed ? 'Completed' : 'Incomplete'}
+            className="list-item-text"
+            secondaryTypographyProps={{ className: 'list-item-text-secondary' }}
+          />
+          <FitnessCenterIcon className="activity-icon" />
+        </ListItem>
+      ));
+    } else {
+      return (
+        <ListItem className="list-item">
+          <ListItemText primary="No workouts scheduled" />
+        </ListItem>
+      );
+    }
+  };
+
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
+    <Box className="calendar-container">
+      <Typography className="calendar-heading" variant="h4" gutterBottom>
         Calendar
       </Typography>
-      {/* Insert calendar component here */}
+      <List>
+        {dates.map((date) => (
+          <Box key={date} className="mb-3">
+            <Typography className="date-header">
+              {new Date(date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Typography>
+            {renderWorkoutForDate(date)}
+            {renderActivities(date)}
+          </Box>
+        ))}
+      </List>
     </Box>
   );
 };

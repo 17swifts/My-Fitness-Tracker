@@ -1,0 +1,108 @@
+/* Styles for the CalendarView component */
+.calendar-container {
+    padding: 24px;
+    background-color: #f9f9f9;
+    /* Light background for the calendar */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-heading {
+    font-size: 2rem;
+    margin-bottom: 24px;
+    color: #333;
+    /* Darker text color for better contrast */
+}
+
+.date-header {
+    font-size: 1.25rem;
+    color: #007BFF;
+    /* Primary color for the date header */
+    margin-bottom: 8px;
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background-color: #ffffff;
+    /* White background for list items */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.list-item-icon {
+    margin-right: 16px;
+    color: #28a745;
+    /* Green color for the success icon */
+}
+
+.list-item-text {
+    flex-grow: 1;
+    color: #555;
+    /* Slightly muted color for the text */
+}
+
+.list-item-text-secondary {
+    font-size: 0.875rem;
+    color: #888;
+    /* Muted color for the secondary text */
+}
+
+.list-item-icon.incomplete {
+    color: #ffc107;
+    /* Yellow color for the incomplete icon */
+}
+
+.activity-icon {
+    margin-left: 12px;
+    color: #6c757d;
+    /* Gray color for activity icons */
+}
+
+.completed-icon {
+    color: #28a745;
+    /* Green for completed workouts */
+}
+
+.incomplete-icon {
+    color: #ffc107;
+    /* Yellow for incomplete workouts */
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 4px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+}
+
+.activity-icon.completed {
+    color: #28a745;
+}
+
+.activity-icon.incomplete {
+    color: #dc3545;
+    /* Red color for incomplete activities */
+}
+
+.no-activities {
+    color: gray;
+    font-style: italic;
+}
+
+/* Utility classes */
+.mb-2 {
+    margin-bottom: 16px;
+}
+
+.mb-3 {
+    margin-bottom: 24px;
+}
+
+.p-3 {
+    padding: 24px;
+}
