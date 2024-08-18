@@ -70,7 +70,7 @@ const CalendarView = () => {
   const renderActivities = (date) => {
     const dateActivities = activities[date] || [];
     return dateActivities.map((activity, index) => (
-      <ListItem className="list-item" >
+      <ListItem className="list-item" key={index}>
         <ListItemIcon className={`${activity.isComplete ? 'completed-icon' : 'incomplete-icon'}`}>
           {activity.isComplete ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
         </ListItemIcon>
