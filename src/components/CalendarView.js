@@ -38,8 +38,8 @@ const CalendarView = () => {
 
           // Mock activities, replace this with your API fetching logic
           setActivities({
-            "2024-08-14": [{ type: 'exercise', name: 'Walking', completed: true }],
-            "2024-08-10": [{ type: 'meals', name: '3 Meals Added', completed: false }]
+            "2024-08-14": [{ type: 'exercise', name: 'Walking', isComplete: true }],
+            "2024-08-11": [{ type: 'meals', name: '3 Meals Added', isComplete: false }]
           });
         }
       } catch (error) {
@@ -71,13 +71,14 @@ const CalendarView = () => {
     const dateActivities = activities[date] || [];
     return dateActivities.map((activity, index) => (
       <ListItem className="list-item" >
-        <ListItemIcon className={`list-item-icon ${activity.completed ? 'completed-icon' : 'incomplete-icon'}`}>
-          {activity.completed ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
+        <ListItemIcon className={`${activity.isComplete ? 'completed-icon' : 'incomplete-icon'}`}>
+          {activity.isComplete ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
         </ListItemIcon>
         <ListItemText
           className="list-item-text"
           primary={activity.name}
-          secondary={activity.type === 'exercise' ? 'Completed' : `Calories: 1800`} // Example secondary text
+          secondary={activity.type === 'exercise' ? '4.26km | 54.55 minutes' : `Calories: 1800`} // Example secondary text
+          secondaryTypographyProps={{ className: 'list-item-text-secondary' }}
         />
         {activity.type === 'exercise' && <FitnessCenterIcon className="activity-icon"/>}
         {activity.type === 'meals' && <RestaurantIcon className="activity-icon"/>}
@@ -90,12 +91,12 @@ const CalendarView = () => {
     if (workoutsForDate.length > 0) {
       return workoutsForDate.map((workout) => (
         <ListItem className="list-item" key={workout.id}>
-          <ListItemIcon className={`list-item-icon ${workout.completed ? 'completed-icon' : 'incomplete-icon'}`}>
-            {workout.completed ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
+          <ListItemIcon className={`${workout.isComplete ? 'completed-icon' : 'incomplete-icon'}`}>
+            {workout.isComplete ? <CheckCircleIcon color="success"/> : <RadioButtonUncheckedIcon />}
           </ListItemIcon>
           <ListItemText
             primary={workoutNames[workout.workoutId] || `Workout ID: ${workout.workoutId}`}
-            secondary={workout.completed ? 'Completed' : 'Incomplete'}
+            secondary={workout.isComplete ? 'Completed' : 'Incomplete'}
             className="list-item-text"
             secondaryTypographyProps={{ className: 'list-item-text-secondary' }}
           />
@@ -105,7 +106,7 @@ const CalendarView = () => {
     } else {
       return (
         <ListItem className="list-item">
-          <ListItemText primary="No workouts scheduled" />
+          <ListItemText className="list-item-text-secondary" primary="No workouts scheduled" />
         </ListItem>
       );
     }

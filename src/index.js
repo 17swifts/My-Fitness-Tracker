@@ -13,14 +13,13 @@ const store = createStore(rootReducer);
 
 const theme = createTheme({
   palette: {
-    mode: 'dark', // Use 'dark' for dark mode
     primary: {
-      main: '#3f51b5',
+      main: '#66f6b3',
     },
     secondary: {
       main: '#f50057',
     },
-  },
+  }
 });
 
 const container = document.getElementById('root');

@@ -1,0 +1,25 @@
+/* Add these styles to your CSS file */
+.sticky-menu {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: white;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #ddd;
+}
+
+.exercise-box {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.exercise-box img {
+    width: 60%;
+    margin-right: 16px;
+}
+
+.exercise-box .MuiTextField-root {
+    margin-right: 16px;
+    flex: 1;
+}

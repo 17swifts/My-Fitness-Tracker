@@ -90,8 +90,8 @@ const App = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/create-workout-plan" element={<CreateWorkoutPlan />} />
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
-              <Route path="/schedule-workout" element={<ScheduleWorkout />} />
-              <Route path="/log-workout" element={<LogWorkout />} />
+              <Route path="/schedule-workout/:workoutId" element={<ScheduleWorkout />} />
+              <Route path="/log-workout/:id" element={<LogWorkout />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </>
           ) : (

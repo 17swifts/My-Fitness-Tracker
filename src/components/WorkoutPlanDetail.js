@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Typography, Box, Button, List, ListItem, ListItemText, Divider, Grid } from '@mui/material';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import ScheduleWorkout from './ScheduleWorkout';
+import Equipment from './Equipment';
 
 const WorkoutPlanDetail = () => {
   const { id } = useParams();
   const [workoutPlan, setWorkoutPlan] = useState(null);
   const [exercises, setExercises] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const handleScheduleClick = () => {
+    navigate(`/schedule-workout/${workoutPlan.id}`);
+  };
+
+  const handleLogWorkoutClick = () => {
+    navigate(`/log-workout/${workoutPlan.id}`);
+  };
 
   useEffect(() => {
     const fetchWorkoutPlan = async () => {
@@ -49,6 +58,7 @@ const WorkoutPlanDetail = () => {
         }, {});
         console.log(exerciseData);
         setExercises(exerciseData);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching exercises:', error);
       }
@@ -57,17 +67,37 @@ const WorkoutPlanDetail = () => {
     fetchWorkoutPlan();
   }, [id]);
 
-  if (!workoutPlan) {
+  if (loading) {
     return <Typography>Loading...</Typography>;
   }
+
+  const calculateEstimatedDuration = () => {
+    // Assume an average duration for each set, e.g., 1 minute
+    const avgSetDuration = 2; // in minutes
+    const totalSets = workoutPlan.setGroups.reduce((total, group) => total + group.sets.length, 0);
+    return totalSets * avgSetDuration;
+  };
 
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
         {workoutPlan.name}
       </Typography>
+      <Typography variant="h6" gutterBottom>
+        Estimated Duration: {calculateEstimatedDuration()} minutes
+      </Typography>
+
+      <Equipment exercises={exercises} workoutPlan={workoutPlan} />
+
+      {workoutPlan.instructions && (
+        <Box mb={2}>
+          <Typography variant="h6">Instructions:</Typography>
+          <Typography>{workoutPlan.instructions}</Typography>
+        </Box>
+      )}
+
       <List>
-        {workoutPlan.setGroups.map((group, index) => (
+      {workoutPlan.setGroups.map((group, index) => (
           <React.Fragment key={index}>
             {group.isSuperSet && (
               <ListItem>
@@ -75,13 +105,19 @@ const WorkoutPlanDetail = () => {
                   primary={`Super Set of ${group.number} sets`}
                   secondary={group.sets.map((set, setIndex) => (
                     <Box key={setIndex} mb={2}>
-                      {exercises[set.exerciseId] && (
-                        <>
-                          <Typography>{exercises[set.exerciseId].name}</Typography>
-                          <img src={exercises[set.exerciseId].imageUrl} alt={exercises[set.exerciseId].name} style={{ width: '60%' }} />
-                        </>
-                      )}
-                      <Typography>Reps: {set.reps}</Typography>
+                        <Grid container spacing={1}>
+                            <Grid item xs={1}>
+                                {exercises[set.exerciseId] && (
+                                    <img src={`../${exercises[set.exerciseId].imageUrl}`} alt={exercises[set.exerciseId].name} style={{ width: '80%' }} />
+                                )}
+                            </Grid>
+                            <Grid item xs={10}>
+                                <>
+                                <Typography>{exercises[set.exerciseId].name}</Typography>
+                                <Typography>{set.reps} - {set.notes}</Typography>
+                                </>
+                            </Grid>
+                        </Grid>
                     </Box>
                   ))}
                 />
@@ -93,14 +129,20 @@ const WorkoutPlanDetail = () => {
                   primary={''}
                   secondary={group.sets.map((set, setIndex) => (
                     <Box key={setIndex} mb={2}>
-                      {exercises[set.exerciseId] && (
-                        <>
-                          <Typography>{exercises[set.exerciseId].name}</Typography>
-                          <img src={exercises[set.exerciseId].imageUrl} alt={exercises[set.exerciseId].name} style={{ width: '60%' }} />
-                        </>
-                      )}
-                      <Typography>Sets: {set.number}</Typography>
-                      <Typography>Reps: {set.reps}</Typography>
+                        <Grid container spacing={1}>
+                            <Grid item xs={1}>
+                                {exercises[set.exerciseId] && (
+                                    <img src={`../${exercises[set.exerciseId].imageUrl}`} alt={exercises[set.exerciseId].name} style={{ width: '80%' }} />
+                                )}
+                            </Grid>
+                            <Grid item xs={10}>
+                                <>
+                                <Typography>{exercises[set.exerciseId].name}</Typography>
+                                <Typography>{set.number} sets x {set.reps} - {set.notes}</Typography>
+                                <Typography>90s rest between sets</Typography>
+                                </>
+                            </Grid>
+                        </Grid>
                     </Box>
                   ))}
                 />
@@ -113,7 +155,12 @@ const WorkoutPlanDetail = () => {
       <Button variant="contained" color="primary" onClick={() => navigate('/workout-plans')}>
         Back to Workout Plans
       </Button>
-      <ScheduleWorkout workoutId={id} />
+      <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
+        Start Now
+      </Button>
+      <Button variant="contained" color="primary" onClick={handleScheduleClick}>
+        Schedule Workout
+      </Button>
     </Box>
   );
 };

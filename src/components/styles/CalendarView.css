@@ -16,7 +16,7 @@
 
 .date-header {
     font-size: 1.25rem;
-    color: #007BFF;
+    color: #43484b;
     /* Primary color for the date header */
     margin-bottom: 8px;
 }
@@ -45,30 +45,15 @@
 }
 
 .list-item-text-secondary {
-    font-size: 0.875rem;
-    color: #888;
+    font-size: 0.875rem !important;
+    color: #888 !important;
     /* Muted color for the secondary text */
-}
-
-.list-item-icon.incomplete {
-    color: #ffc107;
-    /* Yellow color for the incomplete icon */
 }
 
 .activity-icon {
     margin-left: 12px;
     color: #6c757d;
     /* Gray color for activity icons */
-}
-
-.completed-icon {
-    color: #28a745;
-    /* Green for completed workouts */
-}
-
-.incomplete-icon {
-    color: #ffc107;
-    /* Yellow for incomplete workouts */
 }
 
 .activity-item {
@@ -80,13 +65,12 @@
     border-radius: 4px;
 }
 
-.activity-icon.completed {
+.completed-icon {
     color: #28a745;
 }
 
-.activity-icon.incomplete {
-    color: #dc3545;
-    /* Red color for incomplete activities */
+.incomplete-icon {
+    color: gray !important;
 }
 
 .no-activities {

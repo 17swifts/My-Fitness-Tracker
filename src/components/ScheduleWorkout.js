@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { Button, TextField, Box, Typography, Alert } from '@mui/material';
@@ -7,7 +8,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
-const ScheduleWorkout = ({ workoutId }) => {
+const ScheduleWorkout = () => {
+  const { workoutId } = useParams();
   const [workoutDate, setWorkoutDate] = useState(null);
   const [error, setError] = useState('');
   const [scheduledDates, setScheduledDates] = useState([]);
@@ -37,24 +39,24 @@ const ScheduleWorkout = ({ workoutId }) => {
       return;
     }
 
-    if (scheduledDates.includes(workoutDate)) {
+    const formattedDate = dayjs(workoutDate).format('YYYY-MM-DD');
+    if (scheduledDates.includes(formattedDate)) {
       setError('You have already scheduled a workout for this date.');
       return;
     }
 
     try {
       const user = auth.currentUser;
-      const date = dayjs(workoutDate).format('YYYY-MM-DD');
       if (user) {
         await addDoc(collection(firestore, 'scheduledWorkouts'), {
-          date,
+          workoutDate: formattedDate,
           workoutId,
           isComplete: false,
-          userId: user.uid
+          userId: user.uid,
         });
         setWorkoutDate(null);
         setError('');
-        setSuccessMessage(`Successfully scheduled workout for ${workoutDate}`);
+        setSuccessMessage(`Successfully scheduled workout for ${formattedDate}`);
       }
     } catch (error) {
       console.error('Error scheduling workout:', error);
@@ -79,13 +81,12 @@ const ScheduleWorkout = ({ workoutId }) => {
           Schedule Workout
         </Button>
         {successMessage && (
-        <Alert severity="success" sx={{ marginTop: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
+          <Alert severity="success" sx={{ marginTop: 2 }}>
+            {successMessage}
+          </Alert>
+        )}
       </Box>
     </LocalizationProvider>
-
   );
 };
 

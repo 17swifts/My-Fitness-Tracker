@@ -27,7 +27,8 @@ const CreateWorkoutPlan = () => {
             sets: group.exercises.map(exercise => ({
               number: group.isSuperSet ? null : exercise.sets,
               reps: exercise.reps,
-              exerciseId: exercise.id
+              exerciseId: exercise.id,
+              notes: exercise.notes
             }))
           }))
         });
