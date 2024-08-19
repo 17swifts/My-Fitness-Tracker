@@ -56,7 +56,6 @@ const WorkoutPlanDetail = () => {
           acc[id] = data;
           return acc;
         }, {});
-        console.log(exerciseData);
         setExercises(exerciseData);
         setLoading(false);
       } catch (error) {
@@ -92,7 +91,7 @@ const WorkoutPlanDetail = () => {
       {workoutPlan.instructions && (
         <Box mb={2}>
           <Typography variant="h6">Instructions:</Typography>
-          <Typography>{workoutPlan.instructions}</Typography>
+          <Typography dangerouslySetInnerHTML={{ __html: workoutPlan.instructions }}></Typography>
         </Box>
       )}
 
@@ -114,7 +113,7 @@ const WorkoutPlanDetail = () => {
                             <Grid item xs={10}>
                                 <>
                                 <Typography>{exercises[set.exerciseId].name}</Typography>
-                                <Typography>{set.reps} - {set.notes}</Typography>
+                                <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
                                 </>
                             </Grid>
                         </Grid>
@@ -138,7 +137,7 @@ const WorkoutPlanDetail = () => {
                             <Grid item xs={10}>
                                 <>
                                 <Typography>{exercises[set.exerciseId].name}</Typography>
-                                <Typography>{set.number} sets x {set.reps} - {set.notes}</Typography>
+                                <Typography>{set.number} sets x {set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
                                 <Typography>90s rest between sets</Typography>
                                 </>
                             </Grid>

@@ -23,7 +23,6 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
     const q = query(collection(firestore, 'exercises'));
     const querySnapshot = await getDocs(q);
     const exercisesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log(exercisesData);
     setExercises(exercisesData);
   };
 

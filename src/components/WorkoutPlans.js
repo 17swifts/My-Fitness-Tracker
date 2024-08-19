@@ -17,7 +17,6 @@ const WorkoutPlans = () => {
           const q = query(collection(firestore, 'workoutPlans'), where('userId', '==', user.uid));
           const querySnapshot = await getDocs(q);
           const plans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          console.log(plans);
           setWorkoutPlans(plans);
         }
       } catch (error) {

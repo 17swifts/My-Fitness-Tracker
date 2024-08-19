@@ -49,7 +49,7 @@ const ScheduleWorkout = () => {
       const user = auth.currentUser;
       if (user) {
         await addDoc(collection(firestore, 'scheduledWorkouts'), {
-          workoutDate: formattedDate,
+          date: formattedDate,
           workoutId,
           isComplete: false,
           userId: user.uid,

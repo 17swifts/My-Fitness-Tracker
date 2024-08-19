@@ -10,9 +10,10 @@ import './styles/CreateWorkoutPlan.css';
 const CreateWorkoutPlan = () => {
   const navigate = useNavigate();
   const [planName, setPlanName] = useState('');
+  const [planInstructions, setPlanInstructions] = useState('');
   const [setGroups, setSetGroups] = useState([]);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(null); 
 
   const handleCreatePlan = async () => {
     try {
@@ -21,6 +22,7 @@ const CreateWorkoutPlan = () => {
         await addDoc(collection(firestore, 'workoutPlans'), {
           userId: user.uid,
           name: planName,
+          instructions: planInstructions,
           setGroups: setGroups.map((group, index) => ({
             number: group.isSuperSet ? group.number : null,
             isSuperSet: group.isSuperSet,
@@ -96,7 +98,7 @@ const CreateWorkoutPlan = () => {
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" className='create-workout-container'>
       <Typography variant="h4" gutterBottom>
         Create Workout Plan
       </Typography>
@@ -106,6 +108,18 @@ const CreateWorkoutPlan = () => {
         onChange={(e) => setPlanName(e.target.value)}
         fullWidth
         margin="normal"
+      />
+      <TextField
+        id="outlined-multiline-static"
+        label="Instructions"
+        fullWidth
+        multiline
+        margin="normal"
+        rows={5}
+        onChange={(e) => {
+          const formattedText = e.target.value.replace(/\n/g, '<br>');
+          setPlanInstructions(formattedText);
+        }}
       />
       <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
         Add Exercises

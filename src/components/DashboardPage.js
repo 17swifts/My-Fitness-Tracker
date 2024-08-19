@@ -47,9 +47,9 @@ const DashboardPage = () => {
     const fetchProgressData = () => {
       setStepCount(7500); // Example step count
       setSleepData(7.5); // Example sleep hours
-      setBodyWeight(70); // Example body weight in kg
-      setBodyFat(15); // Example body fat percentage
-      setRestingHR(60); // Example resting heart rate
+      setBodyWeight(75); // Example body weight in kg
+      setBodyFat(28.7); // Example body fat percentage
+      setRestingHR(63); // Example resting heart rate
       setCaloricBurn(2200); // Example caloric burn
     };
 
