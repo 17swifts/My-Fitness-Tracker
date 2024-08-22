@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, ListItem, ListItemText, Divider, Grid } from '@mui/material';
+import { Typography, Box, Button, List, ListItem, ListItemText, Divider, Grid, Link } from '@mui/material';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Equipment from './Equipment';
@@ -107,7 +107,13 @@ const WorkoutPlanDetail = () => {
                         <Grid container spacing={1}>
                             <Grid item xs={1}>
                                 {exercises[set.exerciseId] && (
-                                    <img src={`../${exercises[set.exerciseId].imageUrl}`} alt={exercises[set.exerciseId].name} style={{ width: '80%' }} />
+                                    <Link href={`/exercise/${set.exerciseId}`}>
+                                      <img 
+                                        src={`../${exercises[set.exerciseId].imageUrl}`}
+                                        alt={exercises[set.exerciseId].name} 
+                                        style={{ width: '80%' }} 
+                                      />
+                                    </Link>
                                 )}
                             </Grid>
                             <Grid item xs={10}>
@@ -131,7 +137,13 @@ const WorkoutPlanDetail = () => {
                         <Grid container spacing={1}>
                             <Grid item xs={1}>
                                 {exercises[set.exerciseId] && (
-                                    <img src={`../${exercises[set.exerciseId].imageUrl}`} alt={exercises[set.exerciseId].name} style={{ width: '80%' }} />
+                                  <Link href={`/exercise/${set.exerciseId}`}>
+                                    <img 
+                                      src={`../${exercises[set.exerciseId].imageUrl}`}
+                                      alt={exercises[set.exerciseId].name} 
+                                      style={{ width: '80%' }} 
+                                    />
+                                  </Link>
                                 )}
                             </Grid>
                             <Grid item xs={10}>

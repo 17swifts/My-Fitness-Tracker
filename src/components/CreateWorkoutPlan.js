@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Button, TextField, Container, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
 import ExerciseLibrary from './ExerciseLibrary';
 import { Delete } from '@mui/icons-material';
@@ -9,31 +9,95 @@ import './styles/CreateWorkoutPlan.css';
 
 const CreateWorkoutPlan = () => {
   const navigate = useNavigate();
+  const { id } = useParams();  // Get the workout plan ID from the URL
   const [planName, setPlanName] = useState('');
   const [planInstructions, setPlanInstructions] = useState('');
   const [setGroups, setSetGroups] = useState([]);
+  const [exercises, setExercises] = useState({});
   const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);  // Track if we're editing an existing plan
+  const [loading, setLoading] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null); 
 
-  const handleCreatePlan = async () => {
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      const fetchPlanDetails = async () => {
+        try {
+          const docRef = doc(firestore, 'workoutPlans', id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const planData = docSnap.data();
+            setPlanName(planData.name);
+            setPlanInstructions(planData.instructions);
+            fetchExerciseDetails(planData);
+            setSetGroups(planData.setGroups || []);
+            setIsEditing(true);
+          }
+        } catch (error) {
+          console.error('Error fetching plan details:', error);
+        }
+      };
+
+      const fetchExerciseDetails = async (planData) => {
+        try {
+          const exerciseIds = new Set();
+          planData.setGroups.forEach(group => {
+            group.sets.forEach(set => {
+              exerciseIds.add(set.exerciseId);
+            });
+          });
+  
+          const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
+            const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
+            return { id: exerciseId, data: exerciseDoc.data() };
+          });
+  
+          const exerciseResults = await Promise.all(exercisePromises);
+          const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
+            acc[id] = data;
+            return acc;
+          }, {});
+  
+          setExercises(exerciseData);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching exercises:', error);
+        }
+      };
+
+      fetchPlanDetails();
+    }
+  }, [id]);
+
+  const handleSavePlan = async () => {
     try {
-      const user = auth.currentUser;
-      if (user) {
-        await addDoc(collection(firestore, 'workoutPlans'), {
-          userId: user.uid,
-          name: planName,
-          instructions: planInstructions,
-          setGroups: setGroups.map((group, index) => ({
-            number: group.isSuperSet ? group.number : null,
-            isSuperSet: group.isSuperSet,
-            sets: group.exercises.map(exercise => ({
-              number: group.isSuperSet ? null : exercise.sets,
-              reps: exercise.reps,
-              exerciseId: exercise.id,
-              notes: exercise.notes
+        const user = auth.currentUser;
+        if (user) {
+          console.log(setGroups);
+          const planData = {
+            userId: user.uid,
+            name: planName,
+            instructions: planInstructions? planInstructions : "",
+            setGroups: setGroups.map((group, index) => ({
+              number: group.isSuperSet ? group.number : null,
+              isSuperSet: group.isSuperSet,
+              sets: group.sets.map(exercise => ({
+                number: group.isSuperSet ? null : exercise.number,
+                reps: exercise.reps,
+                exerciseId: exercise.exerciseId,
+                notes: exercise.notes ? exercise.notes : ''
+              }))
             }))
-          }))
-        });
+          };
+  
+        if (isEditing) {
+        // Update existing plan
+        await updateDoc(doc(firestore, 'workoutPlans', id), planData);
+        } else {
+        // Create new plan
+        await addDoc(collection(firestore, 'workoutPlans'), planData);
+        }
         setPlanName('');
         setSetGroups([]);
         navigate('/workout-plans');
@@ -43,20 +107,60 @@ const CreateWorkoutPlan = () => {
     }
   };
 
-  const addExercise = (exercise) => {
-    if (currentGroupIndex !== null) {
+  // useEffect(() => {
+  //   if (Object.keys(exercises).length > 0) {
+  //     console.log('Exercises after setting:', exercises);
+  //     // You can perform additional logic here after exercises have been updated
+  //   }
+  // }, [exercises]);
+
+  const addExercise = async  (exercise) => {
+    setLoading(true);
+    // Add the exercise to the exercises list first
+    await new Promise(resolve => {
+      setExercises(prevExercises => {
+        const newExercises = { ...prevExercises };
+        newExercises[exercise.id] = {
+          description: exercise.description,
+          imageUrl: exercise.imageUrl,
+          muscleGroup: exercise.muscleGroup,
+          equipment: exercise.equipment,
+          name: exercise.name
+        };
+        resolve(newExercises);
+        console.log(newExercises);
+        return newExercises;
+      });
+    });
+
+    // Update the setGroups state next
+    await new Promise(resolve => {
       setSetGroups(prevGroups => {
         const newGroups = [...prevGroups];
-        newGroups[currentGroupIndex].exercises.push({ ...exercise, sets: 0, reps: 0, notes: '' });
+        if (currentGroupIndex !== null) {
+          newGroups[currentGroupIndex].sets.push({ 
+            exerciseId: exercise.id, 
+            number: 0, 
+            reps: 0, 
+            notes: '' 
+          });
+        } else {
+          newGroups.push({ 
+            isSuperSet: false, 
+            sets: [{ 
+              exerciseId: exercise.id, 
+              number: 0, 
+              reps: 0, 
+              notes: '' 
+            }] 
+          });
+        }
+        resolve(newGroups); // Resolve the promise after the state is updated
+        console.log(newGroups);
+        setLoading(false);
         return newGroups;
       });
-    } else {
-      setSetGroups(prevGroups => {
-        const newGroups = [...prevGroups];
-        newGroups.push({ isSuperSet: false, number: 1, exercises: [{ ...exercise, sets: 0, reps: 0, notes: '' }] });
-        return newGroups;
-      });
-    }
+    });
     setIsAddingExercise(false);
     setCurrentGroupIndex(null);
   };
@@ -64,7 +168,7 @@ const CreateWorkoutPlan = () => {
   const updateExercise = (groupIndex, exerciseIndex, field, value) => {
     setSetGroups(prevGroups => {
       const newGroups = [...prevGroups];
-      newGroups[groupIndex].exercises[exerciseIndex][field] = value;
+      newGroups[groupIndex].sets[exerciseIndex][field] = value;
       return newGroups;
     });
   };
@@ -77,14 +181,24 @@ const CreateWorkoutPlan = () => {
     });
   };
 
-  const removeExercise = (groupIndex, exerciseIndex) => {
+  const removeExercise = (groupIndex, exerciseIndex, exerciseId) => {
     setSetGroups(prevGroups => {
       const newGroups = [...prevGroups];
-      newGroups[groupIndex].exercises.splice(exerciseIndex, 1);
-      if (newGroups[groupIndex].exercises.length === 0) {
+  
+      // Remove the exercise from the group
+      newGroups[groupIndex].sets.splice(exerciseIndex, 1);
+  
+      // Remove the group if it's empty after removing the exercise
+      if (newGroups[groupIndex].sets.length === 0) {
         newGroups.splice(groupIndex, 1);
       }
+  
       return newGroups;
+    });
+  
+    setExercises(prevExercises => {
+      const { [exerciseId]: _, ...newExercises } = prevExercises; // Remove the exercise using destructuring
+      return newExercises;
     });
   };
 
@@ -97,10 +211,14 @@ const CreateWorkoutPlan = () => {
     });
   };
 
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
+
   return (
     <Container maxWidth="sm" className='create-workout-container'>
       <Typography variant="h4" gutterBottom>
-        Create Workout Plan
+        {isEditing ? 'Edit Workout Plan' : 'Create Workout Plan'}
       </Typography>
       <TextField
         label="Plan Name"
@@ -116,6 +234,7 @@ const CreateWorkoutPlan = () => {
         multiline
         margin="normal"
         rows={5}
+        value={planInstructions}
         onChange={(e) => {
           const formattedText = e.target.value.replace(/\n/g, '<br>');
           setPlanInstructions(formattedText);
@@ -134,7 +253,7 @@ const CreateWorkoutPlan = () => {
       <div>
         {setGroups.map((group, groupIndex) => (
           <React.Fragment key={groupIndex}>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={2} alignItems="center" className='grid-container'>
               <Grid item xs={3}>
                 {group.isSuperSet ? (
                   <TextField label="Sets" type="number"
@@ -156,15 +275,30 @@ const CreateWorkoutPlan = () => {
                   label="Make Super Set"
                 />
               </Grid>
-              {group.exercises.map((exercise, exerciseIndex) => (
+              {group.sets.map((exercise, exerciseIndex) => (
                 <React.Fragment key={exerciseIndex}>
-                  <Grid item xs={3}>
-                    <Typography>{exercise.name}</Typography>
+                  <Grid item xs={2}>
+                  {exercises[exercise.exerciseId] && (
+                    <img 
+                      src={`../${exercises[exercise.exerciseId].imageUrl}`}
+                      alt={exercises[exercise.exerciseId].name} 
+                      style={{ width: '80%' }} 
+                    />
+                  )}
                   </Grid>
+                  {!group.isSuperSet ? (
+                    <Grid item xs={2}>
+                      <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                    </Grid>
+                  ) : 
+                    <Grid item xs={3}>
+                      <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                    </Grid>
+                  }
                   {!group.isSuperSet && (
                     <Grid item xs={2}>
-                      <TextField label="Sets" type="number" value={exercise.sets}
-                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'sets', e.target.value)}
+                      <TextField label="Sets" type="number" value={exercise.number}
+                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
                         fullWidth />
                     </Grid>
                   )}
@@ -173,13 +307,20 @@ const CreateWorkoutPlan = () => {
                       onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
                       fullWidth />
                   </Grid>
-                  <Grid item xs={4}>
-                    <TextField label="Notes" value={exercise.notes}
-                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                      fullWidth />
-                  </Grid>
+                  {!group.isSuperSet ? (
+                    <Grid item xs={3}>
+                      <TextField label="Notes" value={exercise.notes}
+                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
+                        fullWidth />
+                    </Grid>
+                  ) :
+                    <Grid item xs={4}>
+                      <TextField label="Notes" value={exercise.notes}
+                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
+                        fullWidth />
+                    </Grid>}
                   <Grid item xs={1}>
-                    <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex)}>
+                    <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)}>
                       <Delete />
                     </IconButton>
                   </Grid>
@@ -197,14 +338,19 @@ const CreateWorkoutPlan = () => {
           </React.Fragment>
         ))}
       </div>
-      <div className='bottom-buttons'>
-        <Button variant="contained" color="primary" onClick={handleCreatePlan}>
-          Create Plan
+      <Box mt={3} textAlign="center">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSavePlan}
+          style={{ marginRight: '8px' }}
+        >
+          Save Workout Plan
         </Button>
-        <Button variant="contained" color="primary" onClick={() => navigate('/workout-plans')}>
+        <Button variant="outlined" color="secondary" onClick={() => navigate('/workout-plans')}>
           Cancel
         </Button>
-      </div>
+      </Box>
     </Container>
   );
 };

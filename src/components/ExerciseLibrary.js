@@ -74,7 +74,7 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Box onClick={() => setSelectedExercise(exercise)} sx={{ border: selectedExercise?.id === exercise.id ? '2px solid blue' : 'none', padding: '8px', cursor: 'pointer' }}>
               <Typography variant="h6">{exercise.name}</Typography>
-              <img src={exercise.imageUrl} alt={exercise.name} style={{ width: '60%' }} />
+              <img src={`../${exercise.imageUrl}`} alt={exercise.name} style={{ width: '60%' }} />
               <Typography variant="body2">{exercise.muscleGroup}</Typography>
             </Box>
           </Grid>

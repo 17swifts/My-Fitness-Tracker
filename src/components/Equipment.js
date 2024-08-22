@@ -9,7 +9,7 @@ const Equipment = ({ exercises, workoutPlan }) => {
       const exercise = exercises[set.exerciseId];
       if (exercise && exercise.equipment) {
         exercise.equipment.split(',').forEach(equip => {
-          equipmentSet.add(equip);
+          equipmentSet.add(equip.trim());
         });
       }
     });
@@ -17,21 +17,31 @@ const Equipment = ({ exercises, workoutPlan }) => {
 
   const equipmentArray = Array.from(equipmentSet);
 
+  const equipmentIcons = {
+    'Machine': '../icons/machine2.png',
+    'Body Weight': '../icons/body-weight.png',
+    'Dumbbell': '../icons/dumbbell.png',
+    'Barbell': '../icons/barbell.png',
+    'Kettlebell': '../icons/kettlebell.png',
+    'Bench': '../icons/bench.png',
+    'Bike': '../icons/bike.png',
+    'AB Wheel': '../icons/abs.png',
+    'Sled': '../icons/sled.png',
+  };
+
   return (
     <Box mb={2}>
       <Typography variant="h6">Equipment Needed:</Typography>
       <Box display="flex" flexDirection="row" flexWrap="wrap">
         {equipmentArray.map((equip, index) => (
           <Box key={index} mr={2} mb={2} textAlign="center">
-            {equip === 'Machine' && <img src='../icons/machine2.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Body Weight' && <img src='../icons/body-weight.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Dumbbell' && <img src='../icons/dumbbell.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Barbell' && <img src='../icons/barbell.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Kettlebell' && <img src='../icons/kettlebell.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Bench' && <img src='../icons/bench.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Bike' && <img src='../icons/bike.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'AB Wheel' && <img src='../icons/abs.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
-            {equip === 'Sled' && <img src='../icons/sled.png' alt={equip} style={{ width: '50px', height: '50px' }} />}
+            {equipmentIcons[equip] && (
+              <img 
+                src={equipmentIcons[equip]} 
+                alt={equip} 
+                style={{ width: '50px', height: '50px' }} 
+              />
+            )}
             <Typography>{equip}</Typography>
           </Box>
         ))}

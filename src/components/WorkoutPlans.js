@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Box, Button, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, Edit } from '@mui/icons-material';  // Added Edit icon
 import { auth, firestore } from '../firebase';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
@@ -34,6 +34,10 @@ const WorkoutPlans = () => {
     } catch (error) {
       console.error('Error deleting workout plan:', error);
     }
+  };
+
+  const handleEditPlan = (planId) => {
+    navigate(`/create-workout-plan/${planId}`);  // Navigating to the edit page with the plan ID
   };
 
   const countSuperSets = (plan) => {
@@ -79,6 +83,9 @@ const WorkoutPlans = () => {
       >
         Create New Plan
       </Button>
+      <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout')}>
+        Generate Workout
+      </Button>
       <List>
         {workoutPlans.map((plan) => (
           <ListItem key={plan.id} button onClick={() => navigate(`/workout-plans/${plan.id}`)}>
@@ -89,6 +96,9 @@ const WorkoutPlans = () => {
                 : 'No exercises added'}
             />
             <ListItemSecondaryAction>
+              <IconButton edge="end" aria-label="edit" onClick={() => handleEditPlan(plan.id)}>
+                <Edit />
+              </IconButton>
               <IconButton edge="end" aria-label="delete" onClick={() => handleDeletePlan(plan.id)}>
                 <Delete />
               </IconButton>

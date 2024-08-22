@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, TextField, Divider, IconButton, Grid } from '@mui/material';
+import { Typography, Box, Button, List, TextField, Divider, IconButton, Grid, Link } from '@mui/material';
 import { firestore, auth } from '../firebase';
 import { doc, getDoc, addDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import dayjs from 'dayjs';
-// import MoreVertIcon from '@mui/icons-material/MoreVert';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TimerIcon from '@mui/icons-material/Timer';
 
 const LogWorkout = () => {
@@ -245,7 +245,13 @@ const LogWorkout = () => {
                       <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
                       <Grid container spacing={1} alignItems="center" justifyContent="left">
                         <Grid item xs={1}>
-                          <img src={`../${exercises[set.exerciseId]?.imageUrl}`} alt={exercises[set.exerciseId]?.name} style={{ width: '100%' }} />
+                          <Link href={`/exercise/${set.exerciseId}`}>
+                            <img 
+                              src={`../${exercises[set.exerciseId]?.imageUrl}`} 
+                              alt={exercises[set.exerciseId]?.name} 
+                              style={{ width: '100%' }} 
+                            />
+                          </Link>
                         </Grid>
                         <Grid item xs={2}>
                           <TextField
@@ -263,8 +269,13 @@ const LogWorkout = () => {
                             onChange={(e) => handleInputChange(set.exerciseId, i+1, 'weight', e.target.value)}
                           />
                         </Grid>
-                        <Grid item xs={6}></Grid>
+                        <Grid item xs={5}></Grid>
                         <Grid item xs={1}>{renderHistoricalData(set.exerciseId, set.reps, i+1)}</Grid>
+                        <Grid item xs={1}>
+                          <IconButton>
+                            <MoreVertIcon />
+                          </IconButton>
+                        </Grid>
                       </Grid>
                       <Divider />
                     </Box>
@@ -286,7 +297,13 @@ const LogWorkout = () => {
               <Box key={index} mb={2}>
                 <Grid container spacing={3} alignItems="center" justifyContent="left">
                   <Grid item xs={1}>
-                    <img src={`../${exercises[group.sets[0].exerciseId]?.imageUrl}`} alt={exercises[group.sets[0].exerciseId]?.name} style={{ width: '100%' }} />
+                    <Link href={`/exercise/${group.sets[0].exerciseId}`}>
+                      <img 
+                        src={`../${exercises[group.sets[0].exerciseId]?.imageUrl}`} 
+                        alt={exercises[group.sets[0].exerciseId]?.name} 
+                        style={{ width: '100%' }} 
+                      />
+                    </Link>
                   </Grid>
                   <Grid item xs={9}>
                     <Typography variant="h7" gutterBottom>{exercises[group.sets[0].exerciseId]?.name}</Typography>
@@ -315,8 +332,13 @@ const LogWorkout = () => {
                           onChange={(e) => handleInputChange(group.sets[0].exerciseId, i+1, 'weight', e.target.value)}
                         />
                       </Grid>
-                      <Grid item xs={6}></Grid>
+                      <Grid item xs={5}></Grid>
                       <Grid item xs={1}>{renderHistoricalData(group.sets[0].exerciseId, group.sets[0].reps, i+1)}</Grid>
+                      <Grid item xs={1}>
+                          <IconButton>
+                            <MoreVertIcon />
+                          </IconButton>
+                        </Grid>
                     </Grid>
                     <Divider />
                   </Box>

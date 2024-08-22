@@ -8,6 +8,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import dayjs from 'dayjs';
 import './styles/DashboardPage.css';
+import Statistics from './Statistics';
 
 const DashboardPage = () => {
   const [todayWorkouts, setTodayWorkouts] = useState([]);
@@ -154,29 +155,9 @@ const DashboardPage = () => {
             </Box>
           </Grid>
           <Grid item xs={12}>
-            <Box className="progress-box">
-              <Typography variant="body1">Deadlift Progress</Typography>
-              {/* Insert Deadlift progress graph here */}
-            </Box>
+            <Statistics></Statistics>
           </Grid>
-          <Grid item xs={12}>
-            <Box className="progress-box">
-              <Typography variant="body1">Bench Press Progress</Typography>
-              {/* Insert Bench Press progress graph here */}
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box className="progress-box">
-              <Typography variant="body1">Back Squat Progress</Typography>
-              {/* Insert Back Squat progress graph here */}
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box className="progress-box">
-              <Typography variant="body1">Hip Thrust Progress</Typography>
-              {/* Insert Hip Thrust progress graph here */}
-            </Box>
-          </Grid>
+          
         </Grid>
       </Box>
     </Box>
