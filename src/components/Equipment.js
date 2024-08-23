@@ -27,6 +27,7 @@ const Equipment = ({ exercises, workoutPlan }) => {
     'Bike': '../icons/bike.png',
     'AB Wheel': '../icons/abs.png',
     'Sled': '../icons/sled.png',
+    'Plate': '../icons/plate.png',
   };
 
   return (

@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, ListItem, ListItemText, Divider, Grid, Link } from '@mui/material';
+import { Typography, Box, Button, List, ListItem, ListItemText, Divider, Grid, Link, Modal, IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Equipment from './Equipment';
+import ScheduleWorkout from './ScheduleWorkout';
 
 const WorkoutPlanDetail = () => {
   const { id } = useParams();
   const [workoutPlan, setWorkoutPlan] = useState(null);
+  const [isScheduling, setIsScheduling] = useState(false);
   const [exercises, setExercises] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleScheduleClick = () => {
-    navigate(`/schedule-workout/${workoutPlan.id}`);
+    setIsScheduling(true);
   };
 
   const handleLogWorkoutClick = () => {
@@ -79,6 +82,11 @@ const WorkoutPlanDetail = () => {
 
   return (
     <Box p={3}>
+      <IconButton 
+        onClick={() => navigate(-1)} 
+      >
+        <ArrowBackIcon />
+      </IconButton>
       <Typography variant="h4" gutterBottom>
         {workoutPlan.name}
       </Typography>
@@ -163,15 +171,19 @@ const WorkoutPlanDetail = () => {
           </React.Fragment>
         ))}
       </List>
-      <Button variant="contained" color="primary" onClick={() => navigate('/workout-plans')}>
-        Back to Workout Plans
-      </Button>
       <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
         Start Now
       </Button>
       <Button variant="contained" color="primary" onClick={handleScheduleClick}>
         Schedule Workout
       </Button>
+
+      <Modal open={isScheduling} onClose={() => setIsScheduling(false)}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '30%', height: '30%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
+          <ScheduleWorkout workoutId={workoutPlan.id} onClose={() => setIsScheduling(false)} />
+        </Box>
+      </Modal>
+
     </Box>
   );
 };

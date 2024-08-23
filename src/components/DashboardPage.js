@@ -76,11 +76,11 @@ const DashboardPage = () => {
         {todayWorkouts.map((workout) => (
           <ListItem key={workout.id} button onClick={() => handleWorkoutClick(workout.workoutId)}>
             <ListItemIcon>
-              {workout.IsComplete ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
+              {workout.isComplete ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
             </ListItemIcon>
             <ListItemText
               primary={workoutNames[workout.workoutId] || `Workout ID: ${workout.workoutId}`}
-              secondary={workout.IsComplete ? 'Completed' : 'Incomplete'}
+              secondary={workout.isComplete ? 'Completed' : 'Incomplete'}
             />
             <FitnessCenterIcon />
           </ListItem>

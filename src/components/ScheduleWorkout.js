@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { Button, TextField, Box, Typography, Alert } from '@mui/material';
+import { Button, TextField, Box, Typography, Alert} from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
-const ScheduleWorkout = () => {
-  const { workoutId } = useParams();
+const ScheduleWorkout = ({ workoutId }) => {
   const [workoutDate, setWorkoutDate] = useState(null);
   const [error, setError] = useState('');
   const [scheduledDates, setScheduledDates] = useState([]);
@@ -66,7 +65,7 @@ const ScheduleWorkout = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box>
+      <Box p={3}>
         <Typography variant="h6" gutterBottom>
           Schedule Workout
         </Typography>

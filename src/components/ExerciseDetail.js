@@ -51,7 +51,6 @@ const ExerciseDetail = () => {
     }
     return acc;
   }, {});
-  
   const sortedDates = Object.keys(groupedData).sort((a, b) => {
     const dateA = new Date(a.split('/').reverse().join('-'));
     const dateB = new Date(b.split('/').reverse().join('-'));

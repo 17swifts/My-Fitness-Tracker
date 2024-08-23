@@ -5,6 +5,7 @@ import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Button, TextField, Container, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
 import ExerciseLibrary from './ExerciseLibrary';
 import { Delete } from '@mui/icons-material';
+import dayjs from 'dayjs';
 import './styles/CreateWorkoutPlan.css';
 
 const CreateWorkoutPlan = () => {
@@ -79,6 +80,7 @@ const CreateWorkoutPlan = () => {
             userId: user.uid,
             name: planName,
             instructions: planInstructions? planInstructions : "",
+            createdDate: dayjs().format('YYYY-MM-DD'),
             setGroups: setGroups.map((group, index) => ({
               number: group.isSuperSet ? group.number : null,
               isSuperSet: group.isSuperSet,
@@ -234,7 +236,7 @@ const CreateWorkoutPlan = () => {
         multiline
         margin="normal"
         rows={5}
-        value={planInstructions}
+        value={planInstructions.toString().replace(new RegExp("<br>", "g"), '\n')}
         onChange={(e) => {
           const formattedText = e.target.value.replace(/\n/g, '<br>');
           setPlanInstructions(formattedText);

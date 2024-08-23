@@ -146,7 +146,7 @@ const LogWorkout = () => {
                     exerciseId,
                     setNumber: i+1,
                     reps: stats.reps,
-                    weight: stats.weight,
+                    weight: stats.weight? stats.weight : 0,
                     volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.number),
                     metric: parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,
@@ -158,12 +158,13 @@ const LogWorkout = () => {
             else {
               Array.from(Array(parseInt(group.sets[0].number)).keys()).forEach(async i => {
                 const stats = completedWorkout[exerciseId]?.[i+1];
+                console.log(stats);
                 if (stats) {
                   await addDoc(collection(firestore, 'exerciseStats'), {
                     exerciseId,
                     setNumber: i+1,
                     reps: stats.reps,
-                    weight: stats.weight,
+                    weight: stats.weight? stats.weight : 0,
                     volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.sets[0].number),
                     metric: parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,

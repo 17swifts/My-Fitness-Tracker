@@ -87,24 +87,26 @@ const WorkoutPlans = () => {
         Generate Workout
       </Button>
       <List>
-        {workoutPlans.map((plan) => (
-          <ListItem key={plan.id} button onClick={() => navigate(`/workout-plans/${plan.id}`)}>
-            <ListItemText
-              primary={plan.name}
-              secondary={plan.setGroups && plan.setGroups.length > 0 
-                ? `Includes ${countRegularSets(plan)} exercise(s) and ${countSuperSets(plan)} super set(s)` 
-                : 'No exercises added'}
-            />
-            <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="edit" onClick={() => handleEditPlan(plan.id)}>
-                <Edit />
-              </IconButton>
-              <IconButton edge="end" aria-label="delete" onClick={() => handleDeletePlan(plan.id)}>
-                <Delete />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
+      {workoutPlans
+      .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate)) // Sort by createdDate, most recent first
+      .map((plan) => (
+        <ListItem key={plan.id} button onClick={() => navigate(`/workout-plans/${plan.id}`)}>
+          <ListItemText
+            primary={plan.name}
+            secondary={plan.setGroups && plan.setGroups.length > 0 
+              ? `Includes ${countRegularSets(plan)} exercise(s) and ${countSuperSets(plan)} super set(s)` 
+              : 'No exercises added'}
+          />
+          <ListItemSecondaryAction>
+            <IconButton edge="end" aria-label="edit" onClick={() => handleEditPlan(plan.id)}>
+              <Edit />
+            </IconButton>
+            <IconButton edge="end" aria-label="delete" onClick={() => handleDeletePlan(plan.id)}>
+              <Delete />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+      ))}
       </List>
     </Box>
   );
