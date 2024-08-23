@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { Button, TextField, Box, Typography, Alert} from '@mui/material';

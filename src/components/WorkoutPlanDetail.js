@@ -6,6 +6,7 @@ import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Equipment from './Equipment';
 import ScheduleWorkout from './ScheduleWorkout';
+import './styles/WorkoutPlanDetail.css'; // Import the CSS file
 
 const WorkoutPlanDetail = () => {
   const { id } = useParams();
@@ -74,15 +75,14 @@ const WorkoutPlanDetail = () => {
   }
 
   const calculateEstimatedDuration = () => {
-    // Assume an average duration for each set, e.g., 1 minute
-    const avgSetDuration = 2; // in minutes
+    const avgSetDuration = 2; 
     const totalSets = workoutPlan.setGroups.reduce((total, group) => total + group.sets.length, 0);
     return totalSets * avgSetDuration;
   };
 
   return (
-    <Box p={3}>
-      <IconButton 
+    <Box className="workout-detail-container">
+      <IconButton className="back-button"
         onClick={() => navigate(-1)} 
       >
         <ArrowBackIcon />
@@ -104,7 +104,7 @@ const WorkoutPlanDetail = () => {
       )}
 
       <List>
-      {workoutPlan.setGroups.map((group, index) => (
+        {workoutPlan.setGroups.map((group, index) => (
           <React.Fragment key={index}>
             {group.isSuperSet && (
               <ListItem>
@@ -112,25 +112,25 @@ const WorkoutPlanDetail = () => {
                   primary={`Super Set of ${group.number} sets`}
                   secondary={group.sets.map((set, setIndex) => (
                     <Box key={setIndex} mb={2}>
-                        <Grid container spacing={1}>
-                            <Grid item xs={1}>
-                                {exercises[set.exerciseId] && (
-                                    <Link href={`/exercise/${set.exerciseId}`}>
-                                      <img 
-                                        src={`../${exercises[set.exerciseId].imageUrl}`}
-                                        alt={exercises[set.exerciseId].name} 
-                                        style={{ width: '80%' }} 
-                                      />
-                                    </Link>
-                                )}
-                            </Grid>
-                            <Grid item xs={10}>
-                                <>
-                                <Typography>{exercises[set.exerciseId].name}</Typography>
-                                <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
-                                </>
-                            </Grid>
+                      <Grid container spacing={1}>
+                        <Grid item xs={1}>
+                          {exercises[set.exerciseId] && (
+                            <Link href={`/exercise/${set.exerciseId}`}>
+                              <img 
+                                src={`../${exercises[set.exerciseId].imageUrl}`}
+                                alt={exercises[set.exerciseId].name} 
+                                style={{ width: '80%' }} 
+                              />
+                            </Link>
+                          )}
                         </Grid>
+                        <Grid item xs={10}>
+                          <>
+                            <Typography>{exercises[set.exerciseId].name}</Typography>
+                            <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                          </>
+                        </Grid>
+                      </Grid>
                     </Box>
                   ))}
                 />
@@ -142,26 +142,26 @@ const WorkoutPlanDetail = () => {
                   primary={''}
                   secondary={group.sets.map((set, setIndex) => (
                     <Box key={setIndex} mb={2}>
-                        <Grid container spacing={1}>
-                            <Grid item xs={1}>
-                                {exercises[set.exerciseId] && (
-                                  <Link href={`/exercise/${set.exerciseId}`}>
-                                    <img 
-                                      src={`../${exercises[set.exerciseId].imageUrl}`}
-                                      alt={exercises[set.exerciseId].name} 
-                                      style={{ width: '80%' }} 
-                                    />
-                                  </Link>
-                                )}
-                            </Grid>
-                            <Grid item xs={10}>
-                                <>
-                                <Typography>{exercises[set.exerciseId].name}</Typography>
-                                <Typography>{set.number} sets x {set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
-                                <Typography>90s rest between sets</Typography>
-                                </>
-                            </Grid>
+                      <Grid container spacing={1}>
+                        <Grid item xs={1}>
+                          {exercises[set.exerciseId] && (
+                            <Link href={`/exercise/${set.exerciseId}`}>
+                              <img 
+                                src={`../${exercises[set.exerciseId].imageUrl}`}
+                                alt={exercises[set.exerciseId].name} 
+                                style={{ width: '80%' }} 
+                              />
+                            </Link>
+                          )}
                         </Grid>
+                        <Grid item xs={10}>
+                          <>
+                            <Typography>{exercises[set.exerciseId].name}</Typography>
+                            <Typography>{set.number} sets x {set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            <Typography>90s rest between sets</Typography>
+                          </>
+                        </Grid>
+                      </Grid>
                     </Box>
                   ))}
                 />
@@ -171,19 +171,20 @@ const WorkoutPlanDetail = () => {
           </React.Fragment>
         ))}
       </List>
-      <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
-        Start Now
-      </Button>
-      <Button variant="contained" color="primary" onClick={handleScheduleClick}>
-        Schedule Workout
-      </Button>
+      <Box className="sticky-buttons">
+        <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
+          Start Now
+        </Button>
+        <Button variant="contained" color="primary" onClick={handleScheduleClick}>
+          Schedule Workout
+        </Button>
+      </Box>
 
       <Modal open={isScheduling} onClose={() => setIsScheduling(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '30%', height: '30%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
           <ScheduleWorkout workoutId={workoutPlan.id} onClose={() => setIsScheduling(false)} />
         </Box>
       </Modal>
-
     </Box>
   );
 };

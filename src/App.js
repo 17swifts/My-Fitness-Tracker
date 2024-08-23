@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { CssBaseline, Container, AppBar, Toolbar, Typography, Button, BottomNavigation, BottomNavigationAction } from '@mui/material';
-import { Dashboard, CalendarToday, FitnessCenter, BarChart, AccountCircle } from '@mui/icons-material';
+import { Dashboard, CalendarToday, FitnessCenter, BarChart, AccountCircle, Notifications } from '@mui/icons-material';
 
 import SignUp from './components/SignUp';
 import Profile from './components/Profile';
 import CreateWorkoutPlan from './components/CreateWorkoutPlan';
 import ExerciseLibrary from './components/ExerciseLibrary';
-import ScheduleWorkout from './components/ScheduleWorkout';
 import LogWorkout from './components/LogWorkout';
 import Statistics from './components/Statistics';
 import DashboardPage from './components/DashboardPage';
@@ -16,6 +15,8 @@ import WorkoutPlans from './components/WorkoutPlans';
 import WorkoutPlanDetail from './components/WorkoutPlanDetail';
 import ExerciseDetail from './components/ExerciseDetail';
 import { auth } from './firebase';
+import Units from './components/Units';
+import UpdateProfile from './components/UpdateProfile';
 
 const App = () => {
   const [value, setValue] = React.useState(0);
@@ -89,11 +90,13 @@ const App = () => {
               <Route path="/workout-plans/:id" element={<WorkoutPlanDetail />} />
               <Route path="/statistics" element={<Statistics />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/units" element={<Units />} />
+              <Route path='/update-profile' element={<UpdateProfile />} />
+              <Route path='/notifications' element={<Notifications />} />
               <Route path="/create-workout-plan" element={<CreateWorkoutPlan />} />
               <Route path="/create-workout-plan/:id" element={<CreateWorkoutPlan />} />
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
               <Route path="/exercise/:exerciseId" element={<ExerciseDetail/>} />
-              <Route path="/schedule-workout/:workoutId" element={<ScheduleWorkout />} />
               <Route path="/log-workout/:id" element={<LogWorkout />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </>
