@@ -83,7 +83,7 @@ const WorkoutPlans = () => {
       >
         Create New Plan
       </Button>
-      <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout')}>
+      <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout-plan')}>
         Generate Workout
       </Button>
       <List>

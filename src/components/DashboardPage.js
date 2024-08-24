@@ -108,7 +108,7 @@ const DashboardPage = () => {
           <Button variant="contained" color="primary" onClick={() => navigate('/create-workout-plan')}>
             Create Workout
           </Button>
-          <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout')}>
+          <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout-plan')}>
             Generate Workout
           </Button>
         </Box>
