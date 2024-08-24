@@ -11,6 +11,7 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('');
+  const [filter2, setFilter2] = useState('');
   const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: '', imageUrl: '', videoUrl: '' });
   const [selectedExercise, setSelectedExercise] = useState(null);
   const { user } = useAuth();
@@ -41,7 +42,8 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
 
   const filteredExercises = exercises.filter(exercise =>
     exercise.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!filter || exercise.muscleGroup === filter)
+    (!filter || exercise.muscleGroup === filter) && 
+    (!filter2 || exercise.category === filter2)
   );
 
   return (
@@ -54,7 +56,7 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
       </Typography>
 
       <TextField value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Exercises" fullWidth />
-      <Select value={filter} onChange={(e) => setFilter(e.target.value)} displayEmpty fullWidth>
+      <Select value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Muscle Group" displayEmpty fullWidth>
         <MenuItem value="">All</MenuItem>
         <MenuItem value="Back">Back</MenuItem>
         <MenuItem value="Shoulders">Shoulders</MenuItem>
@@ -68,6 +70,17 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
         <MenuItem value="Quads">Quads</MenuItem>
         <MenuItem value="Full Body">Full Body</MenuItem>
         <MenuItem value="Cardio">Cardio</MenuItem>
+        <MenuItem value="Forearm">Forearm</MenuItem>
+      </Select>
+      <Select value={filter2} onChange={(e) => setFilter2(e.target.value)} placeholder="Category" displayEmpty fullWidth>
+        <MenuItem value="">All</MenuItem>
+        <MenuItem value="Push">Push</MenuItem>
+        <MenuItem value="Pull">Pull</MenuItem>
+        <MenuItem value="Squat">Squat</MenuItem>
+        <MenuItem value="Lunge">Lunge</MenuItem>
+        <MenuItem value="Hinge">Hinge</MenuItem>
+        <MenuItem value="Gait">Gait</MenuItem>
+        <MenuItem value="Twist">Twist</MenuItem>
       </Select>
       <Grid container spacing={3} style={{ marginTop: 20 }}>
         {filteredExercises.map((exercise, index) => (

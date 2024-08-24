@@ -17,6 +17,7 @@ import ExerciseDetail from './components/ExerciseDetail';
 import { auth } from './firebase';
 import Units from './components/Units';
 import UpdateProfile from './components/UpdateProfile';
+import FitbitConnect from './components/FitbitConnect';
 
 const App = () => {
   const [value, setValue] = React.useState(0);
@@ -93,6 +94,7 @@ const App = () => {
               <Route path="/units" element={<Units />} />
               <Route path='/update-profile' element={<UpdateProfile />} />
               <Route path='/notifications' element={<Notifications />} />
+              <Route path='/connect/fitbit' element={<FitbitConnect />} />
               <Route path="/create-workout-plan" element={<CreateWorkoutPlan />} />
               <Route path="/create-workout-plan/:id" element={<CreateWorkoutPlan />} />
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
