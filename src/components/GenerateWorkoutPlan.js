@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextField, Select, MenuItem, Checkbox, FormControlLabel, Grid, Typography, IconButton, Divider } from '@mui/material';
+import { Button, TextField, Select, MenuItem, Box, Modal, FormControlLabel, Grid, Typography, IconButton, Divider, Switch } from '@mui/material';
 import { SwapHoriz, Delete } from '@mui/icons-material';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { auth, firestore } from '../firebase';
 import dayjs from 'dayjs';
 import './styles/CreateWorkoutPlan.css';
+import ExerciseLibrary from './ExerciseLibrary';
 
 const GenerateWorkoutPlan = () => {
   const [planName, setPlanName] = useState('');
@@ -18,6 +19,8 @@ const GenerateWorkoutPlan = () => {
   const [repRange, setRepRange] = useState([]);
   const [workoutGenerated, setWorkoutGenerated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(null); 
 
   useEffect(() => {
     const fetchExercises = () => {
@@ -55,7 +58,7 @@ const GenerateWorkoutPlan = () => {
 
   const generateWorkout = () => {
     try {
-      const generatedGroups = generateExerciseGroups(exercises, {
+      const generatedGroups = generateExerciseGroups({
         muscleGroups: muscleGroups,
         category: category,
         time: time,
@@ -75,18 +78,25 @@ const GenerateWorkoutPlan = () => {
       const matchesMuscleGroup = !filters.muscleGroups.length || filters.muscleGroups.includes(exercise.muscleGroup) || filters.muscleGroups.includes('All');
       const matchesCategory = !filters.category.length || filters.category.includes(exercise.category) || filters.category.includes('All');
       const matchesEquipment = !filters.equipment.length || filters.equipment.includes(exercise.equipment) || filters.equipment.includes('All');
-      return matchesMuscleGroup && matchesCategory && matchesEquipment;
+      
+      // Check if the exercise is already in setGroups
+      const isAlreadyInSetGroups = setGroups.some(group =>
+        group.sets.some(set => set.exerciseId === exercise.id)
+      );
+  
+      return matchesMuscleGroup && matchesCategory && matchesEquipment && !isAlreadyInSetGroups;
     });
-
+  
     if (filteredExercises.length === 0) {
-      throw new Error('No exercises match the selected criteria.');
+      throw new Error('No exercises match the selected criteria or all matching exercises have already been added.');
     }
-
+  
     const randomIndex = Math.floor(Math.random() * filteredExercises.length);
     return filteredExercises[randomIndex];
   };
+  
 
-  const generateExerciseGroups = (exercises, filters) => {
+  const generateExerciseGroups = (filters) => {
     const groups = [];
     const approxTimePerSet = 2.5; // Approximate time in minutes for each set
 
@@ -162,6 +172,49 @@ const GenerateWorkoutPlan = () => {
     }
   };
 
+  const toggleSuperSet = (groupIndex) => {
+    setSetGroups(prevGroups => {
+      const newGroups = [...prevGroups];
+      newGroups[groupIndex].isSuperSet = !newGroups[groupIndex].isSuperSet;
+      newGroups[groupIndex].number = newGroups[groupIndex].isSuperSet ? 1 : null;
+      return newGroups;
+    });
+  };
+
+  const addExercise = async  (exercise) => {
+    setLoading(true);
+
+    // Update the setGroups state next
+    await new Promise(resolve => {
+      setSetGroups(prevGroups => {
+        const newGroups = [...prevGroups];
+        if (currentGroupIndex !== null) {
+          newGroups[currentGroupIndex].sets.push({ 
+            exerciseId: exercise.id, 
+            number: 0, 
+            reps: 0, 
+            notes: '' 
+          });
+        } else {
+          newGroups.push({ 
+            isSuperSet: false, 
+            sets: [{ 
+              exerciseId: exercise.id, 
+              number: 0, 
+              reps: 0, 
+              notes: '' 
+            }] 
+          });
+        }
+        resolve(newGroups); // Resolve the promise after the state is updated
+        setLoading(false);
+        return newGroups;
+      });
+    });
+    setIsAddingExercise(false);
+    setCurrentGroupIndex(null);
+  };
+
   const updateExercise = (groupIndex, exerciseIndex, field, value) => {
     setSetGroups(prevGroups => {
       const newGroups = [...prevGroups];
@@ -201,6 +254,12 @@ const GenerateWorkoutPlan = () => {
     return (
       <div>
         <Typography variant="h4">Generate Workout Plan</Typography>
+
+        <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
+          <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
+            <ExerciseLibrary onSelectExercise={addExercise} onClose={() => setIsAddingExercise(false)} />
+          </Box>
+        </Modal>
 
         {!workoutGenerated ? (
           <>
@@ -309,6 +368,9 @@ const GenerateWorkoutPlan = () => {
                 setPlanInstructions(formattedText);
               }}
             />
+            <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
+              Add Exercises
+            </Button>
             <div>
               {setGroups.map((group, groupIndex) => (
                 <React.Fragment key={groupIndex}>
@@ -322,6 +384,17 @@ const GenerateWorkoutPlan = () => {
                       ) : null}
                     </Grid>
                     <Grid item xs={9}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={group.isSuperSet}
+                            onChange={() => toggleSuperSet(groupIndex)}
+                            name="isSuperSet"
+                            color="primary"
+                          />
+                        }
+                        label="Make Super Set"
+                      />
                     </Grid>
                     {group.sets.map((exercise, exerciseIndex) => (
                       <React.Fragment key={exerciseIndex}>
@@ -377,6 +450,13 @@ const GenerateWorkoutPlan = () => {
                         </Grid>
                       </React.Fragment>
                     ))}
+                    {group.isSuperSet && (
+                      <Grid item xs={12}>
+                        <Button variant="outlined" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(groupIndex); }}>
+                          Add Another Exercise to Super Set
+                        </Button>
+                      </Grid>
+                    )}
                   </Grid>
                   <Divider style={{ margin: '20px 0' }} />
                 </React.Fragment>

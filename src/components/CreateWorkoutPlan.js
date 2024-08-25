@@ -109,13 +109,6 @@ const CreateWorkoutPlan = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (Object.keys(exercises).length > 0) {
-  //     console.log('Exercises after setting:', exercises);
-  //     // You can perform additional logic here after exercises have been updated
-  //   }
-  // }, [exercises]);
-
   const addExercise = async  (exercise) => {
     setLoading(true);
     // Add the exercise to the exercises list first
