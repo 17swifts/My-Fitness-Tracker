@@ -75,7 +75,6 @@ const CreateWorkoutPlan = () => {
     try {
         const user = auth.currentUser;
         if (user) {
-          console.log(setGroups);
           const planData = {
             userId: user.uid,
             name: planName,
@@ -123,7 +122,6 @@ const CreateWorkoutPlan = () => {
           name: exercise.name
         };
         resolve(newExercises);
-        console.log(newExercises);
         return newExercises;
       });
     });
@@ -151,7 +149,6 @@ const CreateWorkoutPlan = () => {
           });
         }
         resolve(newGroups); // Resolve the promise after the state is updated
-        console.log(newGroups);
         setLoading(false);
         return newGroups;
       });

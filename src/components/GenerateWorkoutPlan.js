@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextField, Select, MenuItem, Box, Modal, FormControlLabel, Grid, Typography, IconButton, Divider, Switch } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Button, TextField, Select, MenuItem, Box, Modal, FormControlLabel, Grid, Typography, IconButton, Divider, Switch, Alert } from '@mui/material';
 import { SwapHoriz, Delete } from '@mui/icons-material';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { auth, firestore } from '../firebase';
@@ -8,6 +9,7 @@ import './styles/CreateWorkoutPlan.css';
 import ExerciseLibrary from './ExerciseLibrary';
 
 const GenerateWorkoutPlan = () => {
+  const navigate = useNavigate();
   const [planName, setPlanName] = useState('');
   const [planInstructions, setPlanInstructions] = useState('');
   const [setGroups, setSetGroups] = useState([]);
@@ -21,6 +23,7 @@ const GenerateWorkoutPlan = () => {
   const [loading, setLoading] = useState(true);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchExercises = () => {
@@ -50,9 +53,15 @@ const GenerateWorkoutPlan = () => {
   };
 
   const swapExercise = (groupIndex, exerciseIndex) => {
-    const newExercise = selectRandomExercise(); // Logic to select a new random exercise based on initial parameters
+    const newExercise = selectRandomExercise({
+        muscleGroups: muscleGroups,
+        category: category,
+        time: time,
+        equipment: equipment,
+        repRange: repRange,
+      }); // Logic to select a new random exercise based on initial parameters
     const updatedSetGroups = [...setGroups];
-    updatedSetGroups[groupIndex].sets[exerciseIndex] = newExercise;
+    updatedSetGroups[groupIndex].sets[exerciseIndex].exerciseId = newExercise.id;
     setSetGroups(updatedSetGroups);
   };
 
@@ -169,6 +178,8 @@ const GenerateWorkoutPlan = () => {
         })),
       };
       await addDoc(collection(firestore, 'workoutPlans'), planData);
+      setSuccessMessage(`Successfully saved workout ${planName}`);
+      navigate('/workout-plans');
     }
   };
 
@@ -328,12 +339,11 @@ const GenerateWorkoutPlan = () => {
 
             <Select
               label="Rep Range"
-              multiple
               value={repRange}
               onChange={(e) => setRepRange(e.target.value)}
               fullWidth
               displayEmpty
-              renderValue={(selected) => (selected.length === 0 ? "Rep Range" : selected.join(", "))}
+              renderValue={(selected) => (selected ? selected : "Rep Range" )}
             >
               {[...Array(13).keys()].map((i) => (
                 <MenuItem key={i + 3} value={i + 3}>
@@ -462,34 +472,15 @@ const GenerateWorkoutPlan = () => {
                 </React.Fragment>
               ))}
             </div>
-            {/* {setGroups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              {group.isSuperSet ? (
-                <Typography variant="h6">Superset</Typography>
-              ) : (
-                <Typography variant="h6">Regular Set</Typography>
-              )}
-              {group.sets.map((set, setIndex) => (
-                <Grid container key={setIndex} alignItems="center" spacing={2}>
-                  <Grid item>
-                    <Typography>{exercises.find(e => e.id === set.exerciseId)?.name || 'Exercise'}</Typography>
-                  </Grid>
-                  <Grid item>
-                    <Typography>{set.reps} Reps</Typography>
-                  </Grid>
-                  <Grid item>
-                    <IconButton onClick={() => swapExercise(groupIndex, setIndex)}>
-                      <SwapHoriz />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              ))}
-            </div>
-          ))} */}
 
             <Button variant="contained" color="primary" onClick={handleSavePlan}>
               Save Plan
             </Button>
+            {successMessage && (
+            <Alert severity="success" sx={{ marginTop: 2 }}>
+                {successMessage}
+            </Alert>
+            )}
           </>
         )}
       </div>

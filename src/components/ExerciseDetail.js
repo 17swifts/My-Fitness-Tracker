@@ -15,6 +15,7 @@ const ExerciseDetail = () => {
   useEffect(() => {
     const fetchExerciseData = async () => {
       try {
+        const user = auth.currentUser;
         const exerciseDocRef = doc(firestore, 'exercises', exerciseId);
         const exerciseDocSnap = await getDoc(exerciseDocRef);
 
@@ -23,14 +24,16 @@ const ExerciseDetail = () => {
         } else {
           console.error('No such exercise document!');
         }
-
-        const statsQuery = query(
-          collection(firestore, 'exerciseStats'),
-          where('exerciseId', '==', exerciseId)
-        );
-        const statsQuerySnapshot = await getDocs(statsQuery);
-        const stats = statsQuerySnapshot.docs.map((doc) => doc.data());
-        setStatsData(stats);
+        if (user) {
+            const statsQuery = query(
+                collection(firestore, 'exerciseStats'),
+                where('exerciseId', '==', exerciseId),
+                where('userId', '==', user.uid)
+              );
+              const statsQuerySnapshot = await getDocs(statsQuery);
+              const stats = statsQuerySnapshot.docs.map((doc) => doc.data());
+              setStatsData(stats);
+        }
       } catch (error) {
         console.error('Error fetching exercise data: ', error);
       }
