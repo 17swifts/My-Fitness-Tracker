@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
 import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Button, TextField, Container, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ExerciseLibrary from './ExerciseLibrary';
 import { Delete } from '@mui/icons-material';
 import dayjs from 'dayjs';
@@ -18,7 +19,7 @@ const CreateWorkoutPlan = () => {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [isEditing, setIsEditing] = useState(false);  // Track if we're editing an existing plan
   const [loading, setLoading] = useState(false);
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(null); 
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -48,18 +49,18 @@ const CreateWorkoutPlan = () => {
               exerciseIds.add(set.exerciseId);
             });
           });
-  
+
           const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
             const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
             return { id: exerciseId, data: exerciseDoc.data() };
           });
-  
+
           const exerciseResults = await Promise.all(exercisePromises);
           const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
             acc[id] = data;
             return acc;
           }, {});
-  
+
           setExercises(exerciseData);
           setLoading(false);
         } catch (error) {
@@ -73,31 +74,31 @@ const CreateWorkoutPlan = () => {
 
   const handleSavePlan = async () => {
     try {
-        const user = auth.currentUser;
-        if (user) {
-          const planData = {
-            userId: user.uid,
-            name: planName,
-            instructions: planInstructions? planInstructions : "",
-            createdDate: dayjs().format('YYYY-MM-DD'),
-            setGroups: setGroups.map((group, index) => ({
-              number: group.isSuperSet ? group.number : null,
-              isSuperSet: group.isSuperSet,
-              sets: group.sets.map(exercise => ({
-                number: group.isSuperSet ? null : exercise.number,
-                reps: exercise.reps,
-                exerciseId: exercise.exerciseId,
-                notes: exercise.notes ? exercise.notes : ''
-              }))
+      const user = auth.currentUser;
+      if (user) {
+        const planData = {
+          userId: user.uid,
+          name: planName,
+          instructions: planInstructions ? planInstructions : "",
+          createdDate: dayjs().format('YYYY-MM-DD'),
+          setGroups: setGroups.map((group, index) => ({
+            number: group.isSuperSet ? group.number : null,
+            isSuperSet: group.isSuperSet,
+            sets: group.sets.map(exercise => ({
+              number: group.isSuperSet ? null : exercise.number,
+              reps: exercise.reps,
+              exerciseId: exercise.exerciseId,
+              notes: exercise.notes ? exercise.notes : ''
             }))
-          };
-  
+          }))
+        };
+
         if (isEditing) {
-        // Update existing plan
-        await updateDoc(doc(firestore, 'workoutPlans', id), planData);
+          // Update existing plan
+          await updateDoc(doc(firestore, 'workoutPlans', id), planData);
         } else {
-        // Create new plan
-        await addDoc(collection(firestore, 'workoutPlans'), planData);
+          // Create new plan
+          await addDoc(collection(firestore, 'workoutPlans'), planData);
         }
         setPlanName('');
         setSetGroups([]);
@@ -108,7 +109,7 @@ const CreateWorkoutPlan = () => {
     }
   };
 
-  const addExercise = async  (exercise) => {
+  const addExercise = async (exercise) => {
     setLoading(true);
     // Add the exercise to the exercises list first
     await new Promise(resolve => {
@@ -131,21 +132,21 @@ const CreateWorkoutPlan = () => {
       setSetGroups(prevGroups => {
         const newGroups = [...prevGroups];
         if (currentGroupIndex !== null) {
-          newGroups[currentGroupIndex].sets.push({ 
-            exerciseId: exercise.id, 
-            number: 0, 
-            reps: 0, 
-            notes: '' 
+          newGroups[currentGroupIndex].sets.push({
+            exerciseId: exercise.id,
+            number: 0,
+            reps: 0,
+            notes: ''
           });
         } else {
-          newGroups.push({ 
-            isSuperSet: false, 
-            sets: [{ 
-              exerciseId: exercise.id, 
-              number: 0, 
-              reps: 0, 
-              notes: '' 
-            }] 
+          newGroups.push({
+            isSuperSet: false,
+            sets: [{
+              exerciseId: exercise.id,
+              number: 0,
+              reps: 0,
+              notes: ''
+            }]
           });
         }
         resolve(newGroups); // Resolve the promise after the state is updated
@@ -155,6 +156,19 @@ const CreateWorkoutPlan = () => {
     });
     setIsAddingExercise(false);
     setCurrentGroupIndex(null);
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+  
+    const { source, destination } = result;
+  
+    setSetGroups(prevGroups => {
+      const newGroups = [...prevGroups];
+      const [movedSetGroup] = newGroups.splice(source.index, 1);
+      newGroups.splice(destination.index, 0, movedSetGroup);
+      return newGroups;
+    });
   };
 
   const updateExercise = (groupIndex, exerciseIndex, field, value) => {
@@ -176,18 +190,18 @@ const CreateWorkoutPlan = () => {
   const removeExercise = (groupIndex, exerciseIndex, exerciseId) => {
     setSetGroups(prevGroups => {
       const newGroups = [...prevGroups];
-  
+
       // Remove the exercise from the group
       newGroups[groupIndex].sets.splice(exerciseIndex, 1);
-  
+
       // Remove the group if it's empty after removing the exercise
       if (newGroups[groupIndex].sets.length === 0) {
         newGroups.splice(groupIndex, 1);
       }
-  
+
       return newGroups;
     });
-  
+
     setExercises(prevExercises => {
       const { [exerciseId]: _, ...newExercises } = prevExercises; // Remove the exercise using destructuring
       return newExercises;
@@ -243,92 +257,110 @@ const CreateWorkoutPlan = () => {
       </Modal>
 
       <div>
-        {setGroups.map((group, groupIndex) => (
-          <React.Fragment key={groupIndex}>
-            <Grid container spacing={2} alignItems="center" className='grid-container'>
-              <Grid item xs={3}>
-                {group.isSuperSet ? (
-                  <TextField label="Sets" type="number"
-                    value={group.number}
-                    onChange={(e) => updateGroup(groupIndex, 'number', e.target.value)}
-                    fullWidth />
-                ) : null}
-              </Grid>
-              <Grid item xs={9}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={group.isSuperSet}
-                      onChange={() => toggleSuperSet(groupIndex)}
-                      name="isSuperSet"
-                      color="primary"
-                    />
-                  }
-                  label="Make Super Set"
-                />
-              </Grid>
-              {group.sets.map((exercise, exerciseIndex) => (
-                <React.Fragment key={exerciseIndex}>
-                  <Grid item xs={2}>
-                  {exercises[exercise.exerciseId] && (
-                    <img 
-                      src={`../${exercises[exercise.exerciseId].imageUrl}`}
-                      alt={exercises[exercise.exerciseId].name} 
-                      style={{ width: '80%' }} 
-                    />
-                  )}
-                  </Grid>
-                  {!group.isSuperSet ? (
-                    <Grid item xs={2}>
-                      <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
-                    </Grid>
-                  ) : 
-                    <Grid item xs={3}>
-                      <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
-                    </Grid>
-                  }
-                  {!group.isSuperSet && (
-                    <Grid item xs={2}>
-                      <TextField label="Sets" type="number" value={exercise.number}
-                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
-                        fullWidth />
-                    </Grid>
-                  )}
-                  <Grid item xs={2}>
-                    <TextField label="Reps" type="number" value={exercise.reps}
-                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
-                      fullWidth />
-                  </Grid>
-                  {!group.isSuperSet ? (
-                    <Grid item xs={3}>
-                      <TextField label="Notes" value={exercise.notes}
-                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                        fullWidth />
-                    </Grid>
-                  ) :
-                    <Grid item xs={4}>
-                      <TextField label="Notes" value={exercise.notes}
-                        onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                        fullWidth />
-                    </Grid>}
-                  <Grid item xs={1}>
-                    <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)}>
-                      <Delete />
-                    </IconButton>
-                  </Grid>
-                </React.Fragment>
-              ))}
-              {group.isSuperSet && (
-                <Grid item xs={12}>
-                  <Button variant="outlined" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(groupIndex); }}>
-                    Add Another Exercise to Super Set
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
-            <Divider style={{ margin: '20px 0' }} />
-          </React.Fragment>
-        ))}
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="list">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {setGroups.map((group, groupIndex) => (
+                  <Draggable key={`${groupIndex}`} draggableId={`${groupIndex}`} index={groupIndex}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <React.Fragment key={groupIndex}>
+                          <Grid container spacing={2} alignItems="center" className='grid-container'>
+                            <Grid item xs={3}>
+                              {group.isSuperSet ? (
+                                <TextField label="Sets" type="number"
+                                  value={group.number}
+                                  onChange={(e) => updateGroup(groupIndex, 'number', e.target.value)}
+                                  fullWidth />
+                              ) : null}
+                            </Grid>
+                            <Grid item xs={9}>
+                              <FormControlLabel
+                                control={
+                                  <Switch
+                                    checked={group.isSuperSet}
+                                    onChange={() => toggleSuperSet(groupIndex)}
+                                    name="isSuperSet"
+                                    color="primary"
+                                  />
+                                }
+                                label="Make Super Set"
+                              />
+                            </Grid>
+                            {group.sets.map((exercise, exerciseIndex) => (
+                              <React.Fragment key={exerciseIndex}>
+                                <Grid item xs={2}>
+                                  {exercises[exercise.exerciseId] && (
+                                    <img
+                                      src={`../${exercises[exercise.exerciseId].imageUrl}`}
+                                      alt={exercises[exercise.exerciseId].name}
+                                      style={{ width: '80%' }}
+                                    />
+                                  )}
+                                </Grid>
+                                {!group.isSuperSet ? (
+                                  <Grid item xs={2}>
+                                    <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                                  </Grid>
+                                ) :
+                                  <Grid item xs={3}>
+                                    <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                                  </Grid>
+                                }
+                                {!group.isSuperSet && (
+                                  <Grid item xs={2}>
+                                    <TextField label="Sets" type="number" value={exercise.number}
+                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
+                                      fullWidth />
+                                  </Grid>
+                                )}
+                                <Grid item xs={2}>
+                                  <TextField label="Reps" type="number" value={exercise.reps}
+                                    onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
+                                    fullWidth />
+                                </Grid>
+                                {!group.isSuperSet ? (
+                                  <Grid item xs={3}>
+                                    <TextField label="Notes" value={exercise.notes}
+                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
+                                      fullWidth />
+                                  </Grid>
+                                ) :
+                                  <Grid item xs={4}>
+                                    <TextField label="Notes" value={exercise.notes}
+                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
+                                      fullWidth />
+                                  </Grid>}
+                                <Grid item xs={1}>
+                                  <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)}>
+                                    <Delete />
+                                  </IconButton>
+                                </Grid>
+                              </React.Fragment>
+                            ))}
+                            {group.isSuperSet && (
+                              <Grid item xs={12}>
+                                <Button variant="outlined" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(groupIndex); }}>
+                                  Add Another Exercise to Super Set
+                                </Button>
+                              </Grid>
+                            )}
+                          </Grid>
+                          <Divider style={{ margin: '20px 0' }} />
+                        </React.Fragment>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
       <Box mt={3} textAlign="center">
         <Button
