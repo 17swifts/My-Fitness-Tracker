@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, TextField, Divider, IconButton, Grid, Link } from '@mui/material';
+import { Typography, Box, Button, List, TextField, Divider, IconButton, Grid, Link, Modal } from '@mui/material';
+import { SwapHoriz } from '@mui/icons-material';
 import { firestore, auth } from '../firebase';
 import { doc, getDoc, addDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TimerIcon from '@mui/icons-material/Timer';
+import ExerciseLibrary from './ExerciseLibrary';
 
 const LogWorkout = () => {
   const { id } = useParams();
@@ -14,6 +16,9 @@ const LogWorkout = () => {
   const [completedWorkout, setCompletedWorkout] = useState({});
   const [exerciseHistory, setExerciseHistory] = useState({});
   const [timeSpentOnPage, setTimeSpentOnPage] = useState(0); // in milliseconds
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,64 +38,64 @@ const LogWorkout = () => {
       }
     };
 
-    const fetchExerciseDetails = async (planData) => {
-      try {
-        const exerciseIds = new Set();
-        planData.setGroups.forEach(group => {
-          group.sets.forEach(set => {
-            exerciseIds.add(set.exerciseId);
-          });
-        });
-
-        const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
-          const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
-          return { id: exerciseId, data: exerciseDoc.data() };
-        });
-
-        const exerciseResults = await Promise.all(exercisePromises);
-        const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
-          acc[id] = data;
-          return acc;
-        }, {});
-        setExercises(exerciseData);
-
-        await fetchExerciseHistory(exerciseIds);
-      } catch (error) {
-        console.error('Error fetching exercises:', error);
-      }
-    };
-
-    const fetchExerciseHistory = async (exerciseIds) => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const historyPromises = Array.from(exerciseIds).map(async (exerciseId) => {
-          const historyQuery = query(
-            collection(firestore, 'exerciseStats'),
-            where('exerciseId', '==', exerciseId),
-            where('userId', '==', user.uid)
-          );
-          const historySnapshot = await getDocs(historyQuery);
-          const historyData = historySnapshot.docs.map(doc => doc.data());
-
-          return { id: exerciseId, data: historyData };
-        });
-
-        const historyResults = await Promise.all(historyPromises);
-        const historyData = historyResults.reduce((acc, { id, data }) => {
-          acc[id] = data;
-          return acc;
-        }, {});
-
-        setExerciseHistory(historyData);
-      } catch (error) {
-        console.error('Error fetching exercise history:', error);
-      }
-    };
-
     fetchWorkoutPlan();
   }, [id]);
+
+  const fetchExerciseDetails = async (planData) => {
+    try {
+      const exerciseIds = new Set();
+      planData.setGroups.forEach(group => {
+        group.sets.forEach(set => {
+          exerciseIds.add(set.exerciseId);
+        });
+      });
+
+      const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
+        const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
+        return { id: exerciseId, data: exerciseDoc.data() };
+      });
+
+      const exerciseResults = await Promise.all(exercisePromises);
+      const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
+        acc[id] = data;
+        return acc;
+      }, {});
+      setExercises(exerciseData);
+
+      await fetchExerciseHistory(exerciseIds);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+    }
+  };
+
+  const fetchExerciseHistory = async (exerciseIds) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const historyPromises = Array.from(exerciseIds).map(async (exerciseId) => {
+        const historyQuery = query(
+          collection(firestore, 'exerciseStats'),
+          where('exerciseId', '==', exerciseId),
+          where('userId', '==', user.uid)
+        );
+        const historySnapshot = await getDocs(historyQuery);
+        const historyData = historySnapshot.docs.map(doc => doc.data());
+
+        return { id: exerciseId, data: historyData };
+      });
+
+      const historyResults = await Promise.all(historyPromises);
+      const historyData = historyResults.reduce((acc, { id, data }) => {
+        acc[id] = data;
+        return acc;
+      }, {});
+
+      setExerciseHistory(historyData);
+    } catch (error) {
+      console.error('Error fetching exercise history:', error);
+    }
+  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -186,6 +191,19 @@ const LogWorkout = () => {
     }
   };
 
+  const swapExerciseFromLibrary = async (exercise) => {
+    const updatedSetGroups = [...workoutPlan.setGroups];
+    console.log(parseInt(currentGroupIndex) + " " + parseInt(currentExerciseIndex));
+    console.log(updatedSetGroups[parseInt(currentGroupIndex)].sets[parseInt(currentExerciseIndex)]);
+    updatedSetGroups[parseInt(currentGroupIndex)].sets[parseInt(currentExerciseIndex)].exerciseId = exercise.id;
+    workoutPlan.setGroups = updatedSetGroups;
+    await fetchExerciseDetails(workoutPlan);
+    setIsAddingExercise(false);
+    setCurrentGroupIndex(null);
+    setCurrentExerciseIndex(null);
+    console.log(updatedSetGroups[parseInt(currentGroupIndex)].sets[parseInt(currentExerciseIndex)]);
+  };
+
   const handleCancel = () => {
     navigate(`/workout-plans/${id}`);
   };
@@ -221,6 +239,12 @@ const LogWorkout = () => {
           <TimerIcon />
         </IconButton>
       </Box>
+
+      <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
+          <ExerciseLibrary onSelectExercise={swapExerciseFromLibrary} onClose={() => setIsAddingExercise(false)} />
+        </Box>
+      </Modal>
 
       <Typography variant="h4" gutterBottom>
         {workoutPlan.name}
@@ -260,14 +284,25 @@ const LogWorkout = () => {
                               />
                             </Link>
                           </Grid>
-                          <Grid item xs={2}>
-                            <TextField
-                              label="Reps"
-                              type="number"
-                              value={completedWorkout[set.exerciseId]?.[i + 1]?.reps || ''}
-                              onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'reps', e.target.value)}
-                            />
-                          </Grid>
+                          {!exercises[set.exerciseId]?.timed ? (
+                            <Grid item xs={2}>
+                              <TextField
+                                label="Reps"
+                                type="number"
+                                value={completedWorkout[set.exerciseId]?.[i + 1]?.reps || ''}
+                                onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'reps', e.target.value)}
+                              />
+                            </Grid>
+                          ) : (
+                            <Grid item xs={2}>
+                              <TextField
+                                label="Time (s)"
+                                type="number"
+                                value={completedWorkout[set.exerciseId]?.[i + 1]?.time || ''}
+                                onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'time', e.target.value)}
+                              />
+                            </Grid>
+                          )}
                           <Grid item xs={2}>
                             {exercises[set.exerciseId]?.hasWeight && (
                               <TextField
@@ -277,20 +312,12 @@ const LogWorkout = () => {
                                 onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'weight', e.target.value)}
                               />
                             )}
-                            {exercises[set.exerciseId]?.timed && (
-                              <TextField
-                                label="Time (s)"
-                                type="time"
-                                value={completedWorkout[set.exerciseId]?.[i + 1]?.time || ''}
-                                onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'time', e.target.value)}
-                              />
-                            )}
                           </Grid>
                           <Grid item xs={5}></Grid>
                           <Grid item xs={1}>{renderHistoricalData(set.exerciseId, set.reps, i + 1)}</Grid>
-                          <Grid item xs={1}>
-                            <IconButton>
-                              <MoreVertIcon />
+                          <Grid item>
+                            <IconButton onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(index); setCurrentExerciseIndex(i); }}>
+                              <SwapHoriz />
                             </IconButton>
                           </Grid>
                         </Grid>

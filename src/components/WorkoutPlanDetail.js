@@ -127,7 +127,11 @@ const WorkoutPlanDetail = () => {
                         <Grid item xs={10}>
                           <>
                             <Typography>{exercises[set.exerciseId].name}</Typography>
-                            <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            {!exercises[set.exerciseId]?.timed ? (
+                              <Typography>{set.reps} reps{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            ) : (
+                              <Typography>{set.reps} reps x {set.time}s{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            )}
                           </>
                         </Grid>
                       </Grid>
