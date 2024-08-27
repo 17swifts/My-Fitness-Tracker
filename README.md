@@ -43,19 +43,21 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 
 - ~Substitute in logged workout~
 - ~Better profile page~
-- statistics still weirdly loading
+- Statistics still weirdly loading
 - ~Generate workout automatically~
 - ~Edit created workout~
 - Fitbit integration
 - Statistics on dashboard using fitbit
 - Calendar activites from fitbit
-- my fitness pal integration
-- in body itegration 
+- My fitness pal integration
+- In body itegration 
 - ~Update workout detail and log workout to show/ hide weights based on hasWeight~
 - ~Update to support timed exercises~
 - ~Exercise library filter by category~
 - Better user experience for exercise library
 - Cardio exercise support (time, cals, distance)
 - Back arrow styling weird in the middle 
-- back arrow from logged to detail back to wherever 
+- Back arrow from logged to detail back to wherever
+- Timer in log workout 
+- Search in workout plans
 
