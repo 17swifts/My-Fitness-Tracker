@@ -75,7 +75,7 @@ const WorkoutPlanDetail = () => {
   }
 
   const calculateEstimatedDuration = () => {
-    const avgSetDuration = 2; 
+    const avgSetDuration = 2.5;
     const totalSets = workoutPlan.setGroups.reduce((total, group) => total + group.sets.length, 0);
     return totalSets * avgSetDuration;
   };
@@ -83,7 +83,7 @@ const WorkoutPlanDetail = () => {
   return (
     <Box className="workout-detail-container">
       <IconButton className="back-button"
-        onClick={() => navigate(-1)} 
+        onClick={() => navigate(-1)}
       >
         <ArrowBackIcon />
       </IconButton>
@@ -116,10 +116,10 @@ const WorkoutPlanDetail = () => {
                         <Grid item xs={1}>
                           {exercises[set.exerciseId] && (
                             <Link href={`/exercise/${set.exerciseId}`}>
-                              <img 
+                              <img
                                 src={`../${exercises[set.exerciseId].imageUrl}`}
-                                alt={exercises[set.exerciseId].name} 
-                                style={{ width: '80%' }} 
+                                alt={exercises[set.exerciseId].name}
+                                style={{ width: '80%' }}
                               />
                             </Link>
                           )}
@@ -146,10 +146,10 @@ const WorkoutPlanDetail = () => {
                         <Grid item xs={1}>
                           {exercises[set.exerciseId] && (
                             <Link href={`/exercise/${set.exerciseId}`}>
-                              <img 
+                              <img
                                 src={`../${exercises[set.exerciseId].imageUrl}`}
-                                alt={exercises[set.exerciseId].name} 
-                                style={{ width: '80%' }} 
+                                alt={exercises[set.exerciseId].name}
+                                style={{ width: '80%' }}
                               />
                             </Link>
                           )}
@@ -157,7 +157,11 @@ const WorkoutPlanDetail = () => {
                         <Grid item xs={10}>
                           <>
                             <Typography>{exercises[set.exerciseId].name}</Typography>
-                            <Typography>{set.number} sets x {set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            {!exercises[set.exerciseId]?.timed ? (
+                              <Typography>{set.number} sets x {set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            ) : (
+                              <Typography>{set.number} sets x {set.time}s{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                            )}
                             <Typography>90s rest between sets</Typography>
                           </>
                         </Grid>

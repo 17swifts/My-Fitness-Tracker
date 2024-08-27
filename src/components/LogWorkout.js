@@ -138,15 +138,16 @@ const LogWorkout = () => {
         workoutPlan.setGroups.forEach(group => {
           group.sets.forEach(async (set) => {
             const exerciseId = set.exerciseId;
-            if(group.isSuperSet) {
+            if (group.isSuperSet) {
               Array.from(Array(parseInt(group.number)).keys()).forEach(async i => {
-                const stats = completedWorkout[exerciseId]?.[i+1];
+                const stats = completedWorkout[exerciseId]?.[i + 1];
                 if (stats) {
                   await addDoc(collection(firestore, 'exerciseStats'), {
                     exerciseId,
-                    setNumber: i+1,
+                    setNumber: i + 1,
                     reps: stats.reps,
-                    weight: stats.weight? stats.weight : 0,
+                    weight: stats.weight ? stats.weight : 0,
+                    time: stats.time ? stats.time : 0,
                     volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.number),
                     metric: parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,
@@ -157,14 +158,15 @@ const LogWorkout = () => {
             }
             else {
               Array.from(Array(parseInt(group.sets[0].number)).keys()).forEach(async i => {
-                const stats = completedWorkout[exerciseId]?.[i+1];
+                const stats = completedWorkout[exerciseId]?.[i + 1];
                 console.log(stats);
                 if (stats) {
                   await addDoc(collection(firestore, 'exerciseStats'), {
                     exerciseId,
-                    setNumber: i+1,
+                    setNumber: i + 1,
                     reps: stats.reps,
-                    weight: stats.weight? stats.weight : 0,
+                    weight: stats.weight ? stats.weight : 0,
+                    time: stats.time ? stats.time : 0,
                     volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.sets[0].number),
                     metric: parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,
@@ -219,7 +221,7 @@ const LogWorkout = () => {
           <TimerIcon />
         </IconButton>
       </Box>
-      
+
       <Typography variant="h4" gutterBottom>
         {workoutPlan.name}
       </Typography>
@@ -235,116 +237,145 @@ const LogWorkout = () => {
         {workoutPlan.setGroups.map((group, index) => (
           <React.Fragment key={index}>
             {group.isSuperSet ? (
-            <Box mb={2}>
-              <Typography variant="h5" gutterBottom>{`Super Set ${group.number}`}</Typography>
-              {Array.apply(null, { length: group.number }).map((_e, i) => (
-                <React.Fragment key={i}>
-                  <Typography variant="h6">{`Set ${i + 1}`}</Typography> 
-                  {group.sets.map((set) => (
-                    <Box key={`${set.exerciseId}-${i}`} mb={2}>
-                      <Typography>{exercises[set.exerciseId]?.name}</Typography>
-                      <Typography>{set.reps}{set.notes ? ` - ${set.notes}` : ''}</Typography>
-                      <Grid container spacing={1} alignItems="center" justifyContent="left">
-                        <Grid item xs={1}>
-                          <Link href={`/exercise/${set.exerciseId}`}>
-                            <img 
-                              src={`../${exercises[set.exerciseId]?.imageUrl}`} 
-                              alt={exercises[set.exerciseId]?.name} 
-                              style={{ width: '100%' }} 
+              <Box mb={2}>
+                <Typography variant="h5" gutterBottom>{`Super Set ${group.number}`}</Typography>
+                {Array.apply(null, { length: group.number }).map((_e, i) => (
+                  <React.Fragment key={i}>
+                    <Typography variant="h6">{`Set ${i + 1}`}</Typography>
+                    {group.sets.map((set) => (
+                      <Box key={`${set.exerciseId}-${i}`} mb={2}>
+                        <Typography>{exercises[set.exerciseId]?.name}</Typography>
+                        {!exercises[set.exerciseId]?.timed ? (
+                          <Typography>{set.reps} reps {set.notes ? ` - ${set.notes}` : ''}</Typography>
+                        ) : (
+                          <Typography>{set.reps} x {set.time}s{set.notes ? ` - ${set.notes}` : ''}</Typography>
+                        )}
+                        <Grid container spacing={1} alignItems="center" justifyContent="left">
+                          <Grid item xs={1}>
+                            <Link href={`/exercise/${set.exerciseId}`}>
+                              <img
+                                src={`../${exercises[set.exerciseId]?.imageUrl}`}
+                                alt={exercises[set.exerciseId]?.name}
+                                style={{ width: '100%' }}
+                              />
+                            </Link>
+                          </Grid>
+                          <Grid item xs={2}>
+                            <TextField
+                              label="Reps"
+                              type="number"
+                              value={completedWorkout[set.exerciseId]?.[i + 1]?.reps || ''}
+                              onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'reps', e.target.value)}
                             />
-                          </Link>
+                          </Grid>
+                          <Grid item xs={2}>
+                            {exercises[set.exerciseId]?.hasWeight && (
+                              <TextField
+                                label="Weight (kg)"
+                                type="number"
+                                value={completedWorkout[set.exerciseId]?.[i + 1]?.weight || ''}
+                                onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'weight', e.target.value)}
+                              />
+                            )}
+                            {exercises[set.exerciseId]?.timed && (
+                              <TextField
+                                label="Time (s)"
+                                type="time"
+                                value={completedWorkout[set.exerciseId]?.[i + 1]?.time || ''}
+                                onChange={(e) => handleInputChange(set.exerciseId, i + 1, 'time', e.target.value)}
+                              />
+                            )}
+                          </Grid>
+                          <Grid item xs={5}></Grid>
+                          <Grid item xs={1}>{renderHistoricalData(set.exerciseId, set.reps, i + 1)}</Grid>
+                          <Grid item xs={1}>
+                            <IconButton>
+                              <MoreVertIcon />
+                            </IconButton>
+                          </Grid>
                         </Grid>
-                        <Grid item xs={2}>
-                          <TextField
-                            label="Reps"
-                            type="number"
-                            value={completedWorkout[set.exerciseId]?.[i+1]?.reps || ''}
-                            onChange={(e) => handleInputChange(set.exerciseId, i+1, 'reps', e.target.value)}
-                          />
-                        </Grid>
-                        <Grid item xs={2}>
-                          <TextField
-                            label="Weight (kg)"
-                            type="number"
-                            value={completedWorkout[set.exerciseId]?.[i+1]?.weight || ''}
-                            onChange={(e) => handleInputChange(set.exerciseId, i+1, 'weight', e.target.value)}
-                          />
-                        </Grid>
-                        <Grid item xs={5}></Grid>
-                        <Grid item xs={1}>{renderHistoricalData(set.exerciseId, set.reps, i+1)}</Grid>
+                        <Divider />
+                      </Box>
+                    ))}
+                    <Box key={`rest-${i}`} mb={3}>
+                      <Grid container spacing={2} alignItems="center" justifyContent="left">
                         <Grid item xs={1}>
-                          <IconButton>
-                            <MoreVertIcon />
-                          </IconButton>
+                          <img src='../assets/rest.png' alt='rest' style={{ width: '70%' }} />
+                        </Grid>
+                        <Grid item xs={9}>
+                          <Typography>Rest for 90s</Typography>
                         </Grid>
                       </Grid>
-                      <Divider />
                     </Box>
-                  ))}
-                  <Box key={`rest-${i}`} mb={3}>
-                    <Grid container spacing={2} alignItems="center" justifyContent="left">
-                      <Grid item xs={1}>
-                        <img src='../assets/rest.png' alt='rest' style={{ width: '70%' }} />
-                      </Grid>
-                      <Grid item xs={9}>
-                        <Typography>Rest for 90s</Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </React.Fragment>
-              ))}
-            </Box>
+                  </React.Fragment>
+                ))}
+              </Box>
             ) : (
               <Box key={index} mb={2}>
                 <Grid container spacing={3} alignItems="center" justifyContent="left">
                   <Grid item xs={1}>
                     <Link href={`/exercise/${group.sets[0].exerciseId}`}>
-                      <img 
-                        src={`../${exercises[group.sets[0].exerciseId]?.imageUrl}`} 
-                        alt={exercises[group.sets[0].exerciseId]?.name} 
-                        style={{ width: '100%' }} 
+                      <img
+                        src={`../${exercises[group.sets[0].exerciseId]?.imageUrl}`}
+                        alt={exercises[group.sets[0].exerciseId]?.name}
+                        style={{ width: '100%' }}
                       />
                     </Link>
                   </Grid>
                   <Grid item xs={9}>
                     <Typography variant="h7" gutterBottom>{exercises[group.sets[0].exerciseId]?.name}</Typography>
-                    <Typography variant="subtitle1">{group.sets[0].number} sets x {group.sets[0].reps}{group.sets[0].notes ? ` - ${group.sets[0].notes}` : ''}</Typography>
+                    {!exercises[group.sets[0].exerciseId]?.timed ? (
+                      <Typography variant="subtitle1">{group.sets[0].number} sets x {group.sets[0].reps}{group.sets[0].notes ? ` - ${group.sets[0].notes}` : ''}</Typography>
+                    ) : (
+                      <Typography variant="subtitle1">{group.sets[0].number} sets x {group.sets[0].time}s{group.sets[0].notes ? ` - ${group.sets[0].notes}` : ''}</Typography>
+                    )}
                   </Grid>
                 </Grid>
-                {Array.apply(null, { length: group.sets[0].number }).map((_e,i) => (
+                {Array.apply(null, { length: group.sets[0].number }).map((_e, i) => (
                   <Box key={`${group.sets[0].exerciseId}-${i}`} mb={2}>
                     <Grid container spacing={1} alignItems="center" justifyContent="left">
                       <Grid item xs={1}>
                         <Typography variant="subtitle1">{`Set ${i + 1}`}</Typography>
                       </Grid>
                       <Grid item xs={2}>
-                        <TextField
-                          label="Reps"
-                          type="number"
-                          value={completedWorkout[group.sets[0].exerciseId]?.[i+1]?.reps || ''}
-                          onChange={(e) => handleInputChange(group.sets[0].exerciseId, i+1, 'reps', e.target.value)}
-                        />
+                        {!exercises[group.sets[0].exerciseId]?.timed ? (
+                          <TextField
+                            label="Reps"
+                            type="number"
+                            value={completedWorkout[group.sets[0].exerciseId]?.[i + 1]?.reps || ''}
+                            onChange={(e) => handleInputChange(group.sets[0].exerciseId, i + 1, 'reps', e.target.value)}
+                          />
+                        ) : (
+                          <TextField
+                            label="Time (s)"
+                            type="number"
+                            value={completedWorkout[group.sets[0].exerciseId]?.[i + 1]?.time || ''}
+                            onChange={(e) => handleInputChange(group.sets[0].exerciseId, i + 1, 'time', e.target.value)}
+                          />
+                        )}
                       </Grid>
                       <Grid item xs={2}>
-                        <TextField
-                          label="Weight (kg)"
-                          type="number"
-                          value={completedWorkout[group.sets[0].exerciseId]?.[i+1]?.weight || ''}
-                          onChange={(e) => handleInputChange(group.sets[0].exerciseId, i+1, 'weight', e.target.value)}
-                        />
+                        {exercises[group.sets[0].exerciseId]?.hasWeight && (
+                          <TextField
+                            label="Weight (kg)"
+                            type="number"
+                            value={completedWorkout[group.sets[0].exerciseId]?.[i + 1]?.weight || ''}
+                            onChange={(e) => handleInputChange(group.sets[0].exerciseId, i + 1, 'weight', e.target.value)}
+                          />
+                        )}
                       </Grid>
                       <Grid item xs={5}></Grid>
-                      <Grid item xs={1}>{renderHistoricalData(group.sets[0].exerciseId, group.sets[0].reps, i+1)}</Grid>
+                      <Grid item xs={1}>{renderHistoricalData(group.sets[0].exerciseId, group.sets[0].reps, i + 1)}</Grid>
                       <Grid item xs={1}>
-                          <IconButton>
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Grid>
+                        <IconButton>
+                          <MoreVertIcon />
+                        </IconButton>
+                      </Grid>
                     </Grid>
                     <Divider />
                   </Box>
                 ))}
-                
+
               </Box>
             )}
           </React.Fragment>

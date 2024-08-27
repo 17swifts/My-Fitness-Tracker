@@ -87,6 +87,7 @@ const CreateWorkoutPlan = () => {
             sets: group.sets.map(exercise => ({
               number: group.isSuperSet ? null : exercise.number,
               reps: exercise.reps,
+              time: exercise.time ? exercise.time: 0,
               exerciseId: exercise.exerciseId,
               notes: exercise.notes ? exercise.notes : ''
             }))
@@ -136,6 +137,7 @@ const CreateWorkoutPlan = () => {
             exerciseId: exercise.id,
             number: 0,
             reps: 0,
+            time: 0,
             notes: ''
           });
         } else {
@@ -145,6 +147,7 @@ const CreateWorkoutPlan = () => {
               exerciseId: exercise.id,
               number: 0,
               reps: 0,
+              time: 0,
               notes: ''
             }]
           });
@@ -160,9 +163,9 @@ const CreateWorkoutPlan = () => {
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
-  
+
     const { source, destination } = result;
-  
+
     setSetGroups(prevGroups => {
       const newGroups = [...prevGroups];
       const [movedSetGroup] = newGroups.splice(source.index, 1);
@@ -316,6 +319,19 @@ const CreateWorkoutPlan = () => {
                                   <Grid item xs={2}>
                                     <TextField label="Sets" type="number" value={exercise.number}
                                       onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
+                                      fullWidth />
+                                  </Grid>
+                                )}
+                                {!exercises[exercise.exerciseId]?.timed ? (
+                                  <Grid item xs={2}>
+                                    <TextField label="Reps" type="number" value={exercise.reps}
+                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
+                                      fullWidth />
+                                  </Grid>
+                                ) : (
+                                  <Grid item xs={2}>
+                                    <TextField label="Time (s)" type="number" value={exercise.time}
+                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'time', e.target.value)}
                                       fullWidth />
                                   </Grid>
                                 )}
