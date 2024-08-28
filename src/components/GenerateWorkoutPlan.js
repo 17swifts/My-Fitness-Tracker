@@ -266,7 +266,7 @@ const GenerateWorkoutPlan = () => {
     }
 
     return (
-        <div>
+        <Box p={3}>
             <Typography variant="h4">Generate Workout Plan</Typography>
 
             <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
@@ -494,7 +494,7 @@ const GenerateWorkoutPlan = () => {
                     )}
                 </>
             )}
-        </div>
+        </Box>
     );
 };
 

@@ -225,7 +225,7 @@ const CreateWorkoutPlan = () => {
   }
 
   return (
-    <Container maxWidth="sm" className='create-workout-container'>
+    <Box p={3}>
       <Typography variant="h4" gutterBottom>
         {isEditing ? 'Edit Workout Plan' : 'Create Workout Plan'}
       </Typography>
@@ -335,11 +335,6 @@ const CreateWorkoutPlan = () => {
                                       fullWidth />
                                   </Grid>
                                 )}
-                                <Grid item xs={2}>
-                                  <TextField label="Reps" type="number" value={exercise.reps}
-                                    onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
-                                    fullWidth />
-                                </Grid>
                                 {!group.isSuperSet ? (
                                   <Grid item xs={3}>
                                     <TextField label="Notes" value={exercise.notes}
@@ -391,7 +386,7 @@ const CreateWorkoutPlan = () => {
           Cancel
         </Button>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

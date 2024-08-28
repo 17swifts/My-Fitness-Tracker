@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { auth, firestore, googleProvider } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { TextField, Button, Container, Typography, Link } from '@mui/material';
+import { TextField, Button, Box, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
@@ -60,7 +60,7 @@ const SignUp = () => {
   };
 
   return (
-    <Container maxWidth="sm">
+    <Box p={3}>
       <Typography variant="h4" gutterBottom>
         {isSigningUp ? 'Sign Up' : 'Login'}
       </Typography>
@@ -99,7 +99,7 @@ const SignUp = () => {
           {isSigningUp ? 'Login' : 'Sign Up'}
         </Link>
       </Typography>
-    </Container>
+    </Box>
   );
 };
 

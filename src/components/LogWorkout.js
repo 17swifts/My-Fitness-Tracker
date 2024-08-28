@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TimerIcon from '@mui/icons-material/Timer';
 import ExerciseLibrary from './ExerciseLibrary';
+import Timer from './Timer';
 
 const LogWorkout = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const LogWorkout = () => {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
+  const [showTimer, setShowTimer] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -222,6 +224,14 @@ const LogWorkout = () => {
     );
   };
 
+  const handleTimerClick = () => {
+    setShowTimer(true);
+  };
+
+  const handleTimerClose = () => {
+    setShowTimer(false);
+  };
+
   if (!workoutPlan) {
     return <Typography>Loading...</Typography>;
   }
@@ -235,10 +245,13 @@ const LogWorkout = () => {
         <Button variant="outlined" color="secondary" onClick={handleCancel} sx={{ ml: 2 }}>
           Cancel
         </Button>
-        <IconButton>
+        <IconButton onClick={handleTimerClick}>
           <TimerIcon />
         </IconButton>
       </Box>
+
+      {/* Conditionally render the TimerComponent when the icon is clicked */}
+      {showTimer && <Timer onClose={handleTimerClose}/>}
 
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>

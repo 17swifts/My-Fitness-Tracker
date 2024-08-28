@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Box, Button, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material';
+import { Typography, Box, Button, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, TextField } from '@mui/material';
 import { Add, Delete, Edit } from '@mui/icons-material';  // Added Edit icon
 import { auth, firestore } from '../firebase';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import './styles/WorkoutPlans.css'; // Import the CSS file
 
 const WorkoutPlans = () => {
   const [workoutPlans, setWorkoutPlans] = useState([]);
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,6 +72,10 @@ const WorkoutPlans = () => {
     return count;
   };
 
+  const filteredPlans = workoutPlans.filter(plan =>
+    plan.name.toLowerCase().includes(search.toLowerCase()) 
+  );
+
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
@@ -86,8 +92,9 @@ const WorkoutPlans = () => {
       <Button variant="contained" color="secondary" onClick={() => navigate('/generate-workout-plan')}>
         Generate Workout
       </Button>
+      <TextField className='search-bar' value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Plans" fullWidth />
       <List>
-      {workoutPlans
+      {filteredPlans
       .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate)) // Sort by createdDate, most recent first
       .map((plan) => (
         <ListItem key={plan.id} button onClick={() => navigate(`/workout-plans/${plan.id}`)}>
