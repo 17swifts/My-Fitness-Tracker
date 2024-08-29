@@ -1,30 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, MenuItem, Select, IconButton, Snackbar } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, MenuItem, Select, Snackbar, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-const TimerComponent = ({ onClose }) => {
+const Timer = ({ onClose }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerFinished, setTimerFinished] = useState(false);
+  const intervalRef = useRef(null);  // Store the interval ID
 
   useEffect(() => {
-    let timer;
     if (timerRunning && countdown > 0) {
-      timer = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setCountdown(prevCountdown => prevCountdown - 1);
       }, 1000);
-    } else if (countdown === 0) {
-      clearInterval(timer);
+    }
+
+    // Clear the interval when the timer stops or component unmounts
+    return () => clearInterval(intervalRef.current);
+  }, [timerRunning, countdown]);
+
+  useEffect(() => {
+    if (countdown === 0 && timerRunning) {
+      clearInterval(intervalRef.current);
       setTimerRunning(false);
       setSelectedTime(null);
       setTimerFinished(true);
-      alert('Timer finished!');
       onClose(); // Hide the timer when it finishes
     }
-
-    return () => clearInterval(timer);
-  }, [timerRunning, countdown, onClose]);
+  }, [countdown, timerRunning, onClose]);
 
   const handleTimeSelect = (event) => {
     setSelectedTime(event.target.value);
@@ -36,7 +40,7 @@ const TimerComponent = ({ onClose }) => {
     <Box sx={{ mt: 2, p: 2, borderRadius: 2, backgroundColor: '#f5f5f5', boxShadow: 2 }}>
       {!timerRunning && (
         <Select
-          value={countdown || ''}
+          value={selectedTime || ''}
           displayEmpty
           onChange={handleTimeSelect}
           sx={{ width: 120, mr: 2 }}
@@ -72,8 +76,7 @@ const TimerComponent = ({ onClose }) => {
         }
       />
     </Box>
-
   );
 };
 
-export default TimerComponent;
+export default Timer;

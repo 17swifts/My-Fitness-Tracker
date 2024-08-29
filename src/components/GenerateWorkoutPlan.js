@@ -107,7 +107,7 @@ const GenerateWorkoutPlan = () => {
 
     const generateExerciseGroups = (filters) => {
         const groups = [];
-        const approxTimePerSet = 2.5; // Approximate time in minutes for each set
+        const approxTimePerSet = 2; // Approximate time in minutes for each set
 
         const regularSetNumber = getRandomInt(3, 5);
         const supersetExerciseNumber = getRandomInt(2, 3);

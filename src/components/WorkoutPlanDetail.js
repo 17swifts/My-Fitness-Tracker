@@ -75,9 +75,15 @@ const WorkoutPlanDetail = () => {
   }
 
   const calculateEstimatedDuration = () => {
-    const avgSetDuration = 2.5;
-    const totalSets = workoutPlan.setGroups.reduce((total, group) => total + group.sets.length, 0);
-    return totalSets * avgSetDuration;
+    const avgSetDuration = 2;
+
+    const totalDuration = workoutPlan.setGroups.reduce((total, group) => {
+      if(group.isSuperSet) 
+        return total + (parseInt(group.number) * group.sets.length * avgSetDuration)
+      else
+        return total + (parseInt(group.sets[0].number) * avgSetDuration)
+    }, 0);
+    return totalDuration;
   };
 
   return (

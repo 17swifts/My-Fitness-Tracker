@@ -248,10 +248,9 @@ const LogWorkout = () => {
         <IconButton onClick={handleTimerClick}>
           <TimerIcon />
         </IconButton>
+        {/* Conditionally render the TimerComponent when the icon is clicked */}
+        {showTimer && <Timer onClose={handleTimerClose}/>}
       </Box>
-
-      {/* Conditionally render the TimerComponent when the icon is clicked */}
-      {showTimer && <Timer onClose={handleTimerClose}/>}
 
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
