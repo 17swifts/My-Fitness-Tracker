@@ -101,7 +101,7 @@ const CalendarView = () => {
     const workoutsForDate = scheduledWorkouts.filter(workout => workout.date === date);
     if (workoutsForDate.length > 0) {
       return workoutsForDate.map((workout) => (
-        <ListItem className="list-item" key={`${workout.id}-${date}`} button onClick={() => handleWorkoutClick(workout.workoutId)}>
+        <ListItem className="list-item" key={`${workout.id}-${date}`} button onClick={() => handleWorkoutClick(workout.id)}>
           <ListItemIcon className={`${workout.isComplete ? 'completed-icon' : 'incomplete-icon'}`}>
             {workout.isComplete ? <CheckCircleIcon color="success"/> : <RadioButtonUncheckedIcon />}
           </ListItemIcon>

@@ -249,9 +249,6 @@ const CreateWorkoutPlan = () => {
           setPlanInstructions(formattedText);
         }}
       />
-      <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
-        Add Exercises
-      </Button>
 
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
@@ -373,6 +370,11 @@ const CreateWorkoutPlan = () => {
           </Droppable>
         </DragDropContext>
       </div>
+      
+      <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
+        Add Exercises
+      </Button>
+      
       <Box mt={3} textAlign="center">
         <Button
           variant="contained"

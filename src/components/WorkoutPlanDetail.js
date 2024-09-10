@@ -12,13 +12,21 @@ import {
   Link,
   Modal,
   IconButton,
+  ListItemIcon,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { firestore } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import Equipment from './Equipment';
 import ScheduleWorkout from './ScheduleWorkout';
-import './styles/WorkoutPlanDetail.css'; // Import the CSS file
+import './styles/WorkoutPlanDetail.css';
 
 const WorkoutPlanDetail = () => {
   const { id } = useParams();
@@ -26,20 +34,36 @@ const WorkoutPlanDetail = () => {
   const [isScheduling, setIsScheduling] = useState(false);
   const [exercises, setExercises] = useState({});
   const [loading, setLoading] = useState(true);
+  const [isScheduledWorkout, setIsScheduledWorkout] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const navigate = useNavigate();
 
-  const handleScheduleClick = () => {
-    setIsScheduling(true);
-  };
-
-  const handleLogWorkoutClick = () => {
-    navigate(`/log-workout/${workoutPlan.id}`);
-  };
-
   useEffect(() => {
-    const fetchWorkoutPlan = async () => {
+    const fetchWorkoutData = async () => {
       try {
-        const docRef = doc(firestore, 'workoutPlans', id);
+        // Try to fetch from scheduledWorkouts first
+        const scheduledRef = doc(firestore, 'scheduledWorkouts', id);
+        const scheduledSnap = await getDoc(scheduledRef);
+
+        if (scheduledSnap.exists()) {
+          const scheduledData = { id: scheduledSnap.id, ...scheduledSnap.data() };
+          setWorkoutPlan(scheduledData);
+          setIsScheduledWorkout(true);
+          setIsCompleted(scheduledData.completed || false); // Set initial completed state
+          fetchWorkoutPlan(scheduledData.workoutId); // Fetch the actual workout details
+        } else {
+          // If not found in scheduledWorkouts, fetch from workoutPlans
+          fetchWorkoutPlan(id);
+        }
+      } catch (error) {
+        console.error('Error fetching workout data:', error);
+      }
+    };
+
+    const fetchWorkoutPlan = async (workoutId) => {
+      try {
+        const docRef = doc(firestore, 'workoutPlans', workoutId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const planData = { id: docSnap.id, ...docSnap.data() };
@@ -79,16 +103,34 @@ const WorkoutPlanDetail = () => {
       }
     };
 
-    fetchWorkoutPlan();
+    fetchWorkoutData();
   }, [id]);
 
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
+  const handleScheduleClick = () => {
+    setIsScheduling(true);
+  };
+
+  const handleLogWorkoutClick = () => {
+    navigate(`/log-workout/${workoutPlan.id}`);
+  };
+
+  const handleCheckboxChange = () => {
+    setOpenDialog(true);
+  };
+
+  const handleMarkAsComplete = async () => {
+    try {
+      const scheduledRef = doc(firestore, 'scheduledWorkouts', id);
+      await updateDoc(scheduledRef, { completed: !isCompleted });
+      setIsCompleted(!isCompleted);
+      setOpenDialog(false);
+    } catch (error) {
+      console.error('Error marking workout as complete:', error);
+    }
+  };
 
   const calculateEstimatedDuration = () => {
     const avgSetDuration = 2;
-
     const totalDuration = workoutPlan.setGroups.reduce((total, group) => {
       if (group.isSuperSet)
         return total + parseInt(group.number) * group.sets.length * avgSetDuration;
@@ -98,9 +140,13 @@ const WorkoutPlanDetail = () => {
   };
 
   const getColorForSuperset = (index) => {
-    const colors = ['#ff5733', '#33c3ff', '#33ff57']; // Example colors, you can expand this
+    const colors = ['#ff5733', '#33c3ff', '#33ff57'];
     return colors[index % colors.length];
   };
+
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
 
   return (
     <Box className="workout-detail-container">
@@ -116,12 +162,32 @@ const WorkoutPlanDetail = () => {
 
       <Equipment exercises={exercises} workoutPlan={workoutPlan} />
 
-      {workoutPlan.instructions && (
-        <Box mb={2}>
-          <Typography variant="h6">Instructions:</Typography>
-          <Typography dangerouslySetInnerHTML={{ __html: workoutPlan.instructions }}></Typography>
+      {isScheduledWorkout && (
+        <Box display="flex" alignItems="center" mb={2}>
+          <ListItemIcon className={`${isCompleted ? 'completed-icon' : 'incomplete-icon'}`}>
+            {isCompleted ? <CheckCircleIcon color="success"/> : <RadioButtonUncheckedIcon />}
+          </ListItemIcon>
+          <Typography>{isCompleted ? 'Workout Completed' : 'Incomplete'}</Typography>
+          <Link onClick={handleCheckboxChange} style={{ marginLeft: 'auto' }}>
+            {isCompleted ? 'Unmark As Complete' : 'Mark As Complete'}
+          </Link>
         </Box>
       )}
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Mark Workout as Complete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to {isCompleted ? 'unmark' : 'mark'} this workout as complete?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleMarkAsComplete} color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <List>
         {workoutPlan.setGroups.map((group, index) => {
@@ -219,6 +285,7 @@ const WorkoutPlanDetail = () => {
           );
         })}
       </List>
+
       <Box className="sticky-buttons">
         <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
           Start Now

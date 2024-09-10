@@ -74,7 +74,7 @@ const DashboardPage = () => {
     return (
       <List>
         {todayWorkouts.map((workout) => (
-          <ListItem key={workout.id} button onClick={() => handleWorkoutClick(workout.workoutId)}>
+          <ListItem key={workout.id} button onClick={() => handleWorkoutClick(workout.id)}>
             <ListItemIcon>
               {workout.isComplete ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon />}
             </ListItemIcon>
