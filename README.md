@@ -54,10 +54,10 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 - ~Update workout detail and log workout to show/ hide weights based on hasWeight~
 - ~Update to support timed exercises~
 - ~Exercise library filter by category~
-- Better user experience for exercise library
+- ~Better user experience for exercise library~
 - Cardio exercise support (time, cals, distance)
 - Back arrow styling weird in the middle 
 - Back arrow from logged to detail back to wherever
-- Timer in log workout 
-- Search in workout plans
+- ~Timer in log workout~ 
+- ~Search in workout plans~
 
