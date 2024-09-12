@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import { collection, query, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';  // Custom hook to get current user
-import { TextField, Select, MenuItem, Button, Typography, Grid, IconButton, Box } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { TextField, Select, MenuItem, Button, Typography, IconButton, Box, List, ListItem, ListItemText, ListItemAvatar, Avatar, Collapse } from '@mui/material';
+import { Add, FilterList } from '@mui/icons-material';
 import './styles/ExerciseLibrary.css';
 
 const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
@@ -14,6 +14,7 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
   const [filter2, setFilter2] = useState('');
   const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: '', imageUrl: '', videoUrl: '' });
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -42,79 +43,103 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
 
   const filteredExercises = exercises.filter(exercise =>
     exercise.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!filter || exercise.muscleGroup === filter) && 
+    (!filter || exercise.muscleGroup === filter) &&
     (!filter2 || exercise.category === filter2)
   );
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto', p: 4 }}>
+    <Box sx={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto', p: 2 }}>
       <Typography variant="h4" gutterBottom>
         Exercise Library
         <IconButton color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)}>
           <Add />
         </IconButton>
+        <IconButton color="primary" onClick={() => setFilterOpen(!filterOpen)}>
+          <FilterList />
+        </IconButton>
       </Typography>
+      {/* Sticky add button */}
+      {selectedExercise && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => onSelectExercise(selectedExercise)}
+          sx={{ position: 'sticky', top: 0, right: 0, mb: 2, zIndex: 1000 }}
+        >
+          Add
+        </Button>
+      )}
 
       <TextField value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Exercises" fullWidth />
-      <Select value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Muscle Group" displayEmpty fullWidth>
-        <MenuItem value="">All</MenuItem>
-        <MenuItem value="Back">Back</MenuItem>
-        <MenuItem value="Shoulders">Shoulders</MenuItem>
-        <MenuItem value="Core">Core</MenuItem>
-        <MenuItem value="Chest">Chest</MenuItem>
-        <MenuItem value="Biceps">Biceps</MenuItem>
-        <MenuItem value="Triceps">Triceps</MenuItem>
-        <MenuItem value="Glutes">Glutes</MenuItem>
-        <MenuItem value="Calves">Calves</MenuItem>
-        <MenuItem value="Hamstrings">Hamstrings</MenuItem>
-        <MenuItem value="Quads">Quads</MenuItem>
-        <MenuItem value="Full Body">Full Body</MenuItem>
-        <MenuItem value="Cardio">Cardio</MenuItem>
-        <MenuItem value="Forearm">Forearm</MenuItem>
-      </Select>
-      <Select value={filter2} onChange={(e) => setFilter2(e.target.value)} placeholder="Category" displayEmpty fullWidth>
-        <MenuItem value="">All</MenuItem>
-        <MenuItem value="Push">Push</MenuItem>
-        <MenuItem value="Pull">Pull</MenuItem>
-        <MenuItem value="Squat">Squat</MenuItem>
-        <MenuItem value="Lunge">Lunge</MenuItem>
-        <MenuItem value="Hinge">Hinge</MenuItem>
-        <MenuItem value="Gait">Gait</MenuItem>
-        <MenuItem value="Twist">Twist</MenuItem>
-      </Select>
-      <Grid container spacing={3} style={{ marginTop: 20 }}>
+
+      {/* Filter Section */}
+      <Collapse in={filterOpen}>
+        <Box sx={{ mb: 2 }}>
+          <Select value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Muscle Group" displayEmpty fullWidth>
+            <MenuItem value="">All</MenuItem>
+            {/* ... Muscle Groups */}
+            <MenuItem value="Back">Back</MenuItem>
+            <MenuItem value="Shoulders">Shoulders</MenuItem>
+            <MenuItem value="Core">Core</MenuItem>
+            <MenuItem value="Chest">Chest</MenuItem>
+            <MenuItem value="Biceps">Biceps</MenuItem>
+            <MenuItem value="Triceps">Triceps</MenuItem>
+            <MenuItem value="Glutes">Glutes</MenuItem>
+            <MenuItem value="Calves">Calves</MenuItem>
+            <MenuItem value="Hamstrings">Hamstrings</MenuItem>
+            <MenuItem value="Quads">Quads</MenuItem>
+            <MenuItem value="Full Body">Full Body</MenuItem>
+            <MenuItem value="Cardio">Cardio</MenuItem>
+            <MenuItem value="Forearm">Forearm</MenuItem>
+          </Select>
+          <Select value={filter2} onChange={(e) => setFilter2(e.target.value)} placeholder="Category" displayEmpty fullWidth>
+            <MenuItem value="">All</MenuItem>
+            {/* ... Exercise Categories */}
+            <MenuItem value="Push">Push</MenuItem>
+            <MenuItem value="Pull">Pull</MenuItem>
+            <MenuItem value="Squat">Squat</MenuItem>
+            <MenuItem value="Lunge">Lunge</MenuItem>
+            <MenuItem value="Hinge">Hinge</MenuItem>
+            <MenuItem value="Gait">Gait</MenuItem>
+            <MenuItem value="Twist">Twist</MenuItem>
+          </Select>
+        </Box>
+      </Collapse>
+
+      {/* List format for exercises */}
+      <List sx={{ mt: 2 }}>
         {filteredExercises.map((exercise, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box onClick={() => setSelectedExercise(exercise)} sx={{ border: selectedExercise?.id === exercise.id ? '2px solid blue' : 'none', padding: '8px', cursor: 'pointer' }}>
-              <Typography variant="h6">{exercise.name}</Typography>
-              <img src={`../${exercise.imageUrl}`} alt={exercise.name} style={{ width: '60%' }} />
-              <Typography variant="body2">{exercise.muscleGroup}</Typography>
-            </Box>
-          </Grid>
+          <Box onClick={() => setSelectedExercise(exercise)} sx={{ border: selectedExercise?.id === exercise.id ? '2px solid blue' : 'none', padding: '8px', cursor: 'pointer' }}>
+            <ListItem key={index}>
+              <ListItemAvatar>
+                <Avatar alt={exercise.name} src={`../${exercise.imageUrl}`} />
+              </ListItemAvatar>
+              <ListItemText primary={exercise.name} secondary={exercise.muscleGroup} />
+            </ListItem>
+          </Box>
+
         ))}
-      </Grid>
+      </List>
+
       {isAddingExercise && (
         <form onSubmit={handleAddExercise}>
-          <TextField label="Name" value={newExercise.name} onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
-          <TextField label="Muscle Group" value={newExercise.muscleGroup} onChange={(e) => setNewExercise({ ...newExercise, muscleGroup: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
-          <TextField label="Image URL" value={newExercise.imageUrl} onChange={(e) => setNewExercise({ ...newExercise, imageUrl: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
-          <TextField label="Video URL" value={newExercise.videoUrl} onChange={(e) => setNewExercise({ ...newExercise, videoUrl: e.target.value })} fullWidth style={{ marginBottom: 20 }} />
-          <Button variant="contained" color="primary" type="submit">
+          {/* Fields for adding new exercise */}
+          <TextField label="Name" value={newExercise.name} onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })} fullWidth margin="normal" />
+          <TextField label="Muscle Group" value={newExercise.muscleGroup} onChange={(e) => setNewExercise({ ...newExercise, muscleGroup: e.target.value })} fullWidth margin="normal" />
+          <TextField label="Image URL" value={newExercise.imageUrl} onChange={(e) => setNewExercise({ ...newExercise, imageUrl: e.target.value })} fullWidth margin="normal" />
+          <TextField label="Video URL" value={newExercise.videoUrl} onChange={(e) => setNewExercise({ ...newExercise, videoUrl: e.target.value })} fullWidth margin="normal" />
+          <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
             Add Exercise
           </Button>
-          <Button variant="contained" color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)}>
+          <Button variant="contained" color="secondary" onClick={() => setIsAddingExercise(!isAddingExercise)} sx={{ mt: 2 }}>
             Cancel
           </Button>
         </form>
       )}
-      <Button variant="contained" color="primary" onClick={onClose} style={{ marginTop: 20 }}>
+
+      <Button variant="contained" color="primary" onClick={onClose} sx={{ mt: 2 }}>
         Back
       </Button>
-      {selectedExercise && (
-        <Button variant="contained" color="primary" onClick={() => onSelectExercise(selectedExercise)} style={{ marginTop: 20 }}>
-          Add
-        </Button>
-      )}
     </Box>
   );
 };

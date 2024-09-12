@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
 import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Button, TextField, Container, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
+import { Button, TextField, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ExerciseLibrary from './ExerciseLibrary';
 import { Delete } from '@mui/icons-material';
@@ -374,7 +374,7 @@ const CreateWorkoutPlan = () => {
       <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
         Add Exercises
       </Button>
-      
+
       <Box mt={3} textAlign="center">
         <Button
           variant="contained"

@@ -121,7 +121,7 @@ const WorkoutPlanDetail = () => {
   const handleMarkAsComplete = async () => {
     try {
       const scheduledRef = doc(firestore, 'scheduledWorkouts', id);
-      await updateDoc(scheduledRef, { completed: !isCompleted });
+      await updateDoc(scheduledRef, { isComplete: !isCompleted });
       setIsCompleted(!isCompleted);
       setOpenDialog(false);
     } catch (error) {

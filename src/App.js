@@ -19,6 +19,7 @@ import Units from './components/Units';
 import UpdateProfile from './components/UpdateProfile';
 import FitbitConnect from './components/FitbitConnect';
 import GenerateWorkoutPlan from './components/GenerateWorkoutPlan';
+import LogExercise from './components/LogExercise';
 
 const App = () => {
   const [value, setValue] = React.useState(0);
@@ -102,6 +103,7 @@ const App = () => {
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
               <Route path="/exercise/:exerciseId" element={<ExerciseDetail/>} />
               <Route path="/log-workout/:id" element={<LogWorkout />} />
+              <Route path="/log-exercise" element={<LogExercise />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </>
           ) : (

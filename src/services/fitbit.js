@@ -1,5 +1,5 @@
-const CLIENT_ID = 'YOUR_CLIENT_ID';
-const REDIRECT_URI = 'YOUR_REDIRECT_URI';
+const CLIENT_ID = '2230c0aa7f8617ff589361ef02e8a380';
+const REDIRECT_URI = 'http://localhost';
 const AUTH_URL = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=activity%20nutrition%20profile%20settings%20sleep%20weight&expires_in=604800`;
 
 const redirectToFitbitAuth = () => {

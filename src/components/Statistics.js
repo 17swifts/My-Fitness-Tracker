@@ -87,7 +87,6 @@ const Statistics = () => {
   };
 
   const renderGraph = (exerciseName) => {
-    console.log(exerciseData);
     if (!exerciseData[exerciseName] || exerciseData[exerciseName].length === 0) {
       return <Typography variant="body2">No data available for {exerciseName}</Typography>;
     }

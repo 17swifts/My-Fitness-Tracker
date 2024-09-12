@@ -8,6 +8,7 @@ import rootReducer from './reducers';
 import { SnackbarProvider } from 'notistack';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
+import { FitbitProvider } from './context/FitbitContext.js';
 
 const store = createStore(rootReducer);
 
@@ -31,7 +32,9 @@ root.render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <App />
+          <FitbitProvider>
+            <App />
+          </FitbitProvider>,
         </BrowserRouter>
       </ThemeProvider>
     </SnackbarProvider>
