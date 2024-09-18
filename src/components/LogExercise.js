@@ -32,6 +32,12 @@ const LogExercise = () => {
         setExerciseData(updatedData);
     };
 
+    const handleTimeChange = (index, value) => {
+        const updatedData = [...exerciseData];
+        updatedData[index].time = value;
+        setExerciseData(updatedData);
+    };
+
     const handleLog = async () => {
         const user = auth.currentUser;
         if (user && selectedExercise && exerciseData.length > 0) {
@@ -130,14 +136,24 @@ const LogExercise = () => {
                             fullWidth
                             margin="normal"
                         />
-                        <TextField
-                            type="number"
-                            label={`Set ${index + 1} Weight (kg)`}
-                            value={set.weight}
-                            onChange={(e) => handleWeightChange(index, e.target.value)}
-                            fullWidth
-                            margin="normal"
-                        />
+                        {!selectedExercise.timed ? (
+                            <TextField
+                                type="number"
+                                label={`Set ${index + 1} Weight (kg)`}
+                                value={set.weight}
+                                onChange={(e) => handleWeightChange(index, e.target.value)}
+                                fullWidth
+                                margin="normal"
+                            />
+                        ) : (
+                            <TextField
+                                label={`Set ${index + 1} Time (s)`}
+                                type="number"
+                                fullWidth
+                                margin="normal"
+                                value={set.time}
+                                onChange={(e) => handleTimeChange(index, e.target.value)}
+                            />)}
                     </Box>
                 ))
             )}
