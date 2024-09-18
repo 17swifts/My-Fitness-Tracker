@@ -17,7 +17,7 @@ const LogExercise = () => {
     const handleSetsChange = (e) => {
         const numSets = parseInt(e.target.value);
         setSets(numSets);
-        setExerciseData(Array.from({ length: numSets }, () => ({ reps: '', weight: '' })));
+        setExerciseData(Array.from({ length: numSets }, () => ({ reps: '', weight: '', time: '' })));
     };
 
     const handleRepsChange = (index, value) => {
@@ -36,11 +36,21 @@ const LogExercise = () => {
         const user = auth.currentUser;
         if (user && selectedExercise && exerciseData.length > 0) {
             try {
-                await addDoc(collection(firestore, 'exerciseStats'), {
-                    userId: user.uid,
-                    exerciseId: selectedExercise.id,
-                    date: new Date(),
-                    sets: exerciseData,
+                Array.from(Array(parseInt(sets)).keys()).forEach(async i => {
+                    const stats = exerciseData[i + 1];
+                    if (stats) {
+                        await addDoc(collection(firestore, 'exerciseStats'), {
+                            exerciseId: selectedExercise.id,
+                            setNumber: i + 1,
+                            reps: stats.reps,
+                            weight: stats.weight ? stats.weight : 0,
+                            time: stats.time ? stats.time : 0,
+                            volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(sets),
+                            metric: parseInt(stats.reps) * parseInt(stats.weight),
+                            date: new Date(),
+                            userId: user.uid
+                        });
+                    }
                 });
                 setConfirmationOpen(true);
             } catch (error) {
@@ -64,6 +74,7 @@ const LogExercise = () => {
     const selectExercise = async (exercise) => {
         console.log(exercise);
         setSelectedExercise(exercise);
+        setIsAddingExercise(false);
     };
 
     return (
@@ -84,26 +95,26 @@ const LogExercise = () => {
             {/* Sets and Reps Input */}
             {selectedExercise && (
                 <Grid container spacing={1} alignItems="center" justifyContent="left">
-                <Grid item xs={1}>
-                  <Link href={`/exercise/${selectedExercise.exerciseId}`}>
-                    <img
-                      src={`../${selectedExercise.imageUrl}`}
-                      alt={selectedExercise.name}
-                      style={{ width: '100%' }}
+                    <Grid item xs={1}>
+                        <Link href={`/exercise/${selectedExercise.exerciseId}`}>
+                            <img
+                                src={`../${selectedExercise.imageUrl}`}
+                                alt={selectedExercise.name}
+                                style={{ width: '100%' }}
+                            />
+                        </Link>
+                    </Grid>
+                    <Grid item xs={4}>
+                        <Typography>{selectedExercise.name}</Typography>
+                    </Grid>
+                    <TextField
+                        type="number"
+                        label="Number of Sets"
+                        value={sets}
+                        onChange={handleSetsChange}
+                        fullWidth
+                        margin="normal"
                     />
-                  </Link>
-                </Grid>
-                <Grid item xs={4}>
-                    <Typography>{selectedExercise.name}</Typography>
-                </Grid>
-                <TextField
-                    type="number"
-                    label="Number of Sets"
-                    value={sets}
-                    onChange={handleSetsChange}
-                    fullWidth
-                    margin="normal"
-                />
                 </Grid>
             )}
 

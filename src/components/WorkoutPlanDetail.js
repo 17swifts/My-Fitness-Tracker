@@ -50,7 +50,7 @@ const WorkoutPlanDetail = () => {
           const scheduledData = { id: scheduledSnap.id, ...scheduledSnap.data() };
           setWorkoutPlan(scheduledData);
           setIsScheduledWorkout(true);
-          setIsCompleted(scheduledData.completed || false); // Set initial completed state
+          setIsCompleted(scheduledData.isCompleted || false); // Set initial completed state
           fetchWorkoutPlan(scheduledData.workoutId); // Fetch the actual workout details
         } else {
           // If not found in scheduledWorkouts, fetch from workoutPlans
