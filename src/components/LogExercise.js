@@ -53,7 +53,7 @@ const LogExercise = () => {
                             time: stats.time ? stats.time : 0,
                             volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(sets),
                             metric: parseInt(stats.reps) * parseInt(stats.weight),
-                            date: new Date(),
+                            date: new Date().toLocaleDateString(),
                             userId: user.uid
                         });
                     }
@@ -102,7 +102,7 @@ const LogExercise = () => {
             {selectedExercise && (
                 <Grid container spacing={1} alignItems="center" justifyContent="left">
                     <Grid item xs={1}>
-                        <Link href={`/exercise/${selectedExercise.exerciseId}`}>
+                        <Link href={`/exercise/${selectedExercise.id}`}>
                             <img
                                 src={`../${selectedExercise.imageUrl}`}
                                 alt={selectedExercise.name}
@@ -128,14 +128,16 @@ const LogExercise = () => {
             {sets && (
                 exerciseData.map((set, index) => (
                     <Box key={index} display="flex" gap={2} alignItems="center">
-                        <TextField
-                            type="number"
-                            label={`Set ${index + 1} Reps`}
-                            value={set.reps}
-                            onChange={(e) => handleRepsChange(index, e.target.value)}
-                            fullWidth
-                            margin="normal"
-                        />
+                        {!selectedExercise.timed && (
+                            <TextField
+                                type="number"
+                                label={`Set ${index + 1} Reps`}
+                                value={set.reps}
+                                onChange={(e) => handleRepsChange(index, e.target.value)}
+                                fullWidth
+                                margin="normal"
+                            />
+                        )};
                         {!selectedExercise.timed ? (
                             <TextField
                                 type="number"
