@@ -152,11 +152,11 @@ const LogWorkout = () => {
                   await addDoc(collection(firestore, 'exerciseStats'), {
                     exerciseId,
                     setNumber: i + 1,
-                    reps: stats.reps,
+                    reps: stats.reps ? stats.reps : 0,
                     weight: stats.weight ? stats.weight : 0,
                     time: stats.time ? stats.time : 0,
-                    volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.number),
-                    metric: parseInt(stats.reps) * parseInt(stats.weight),
+                    volume: stats.time ? parseInt(stats.time) * parseInt(group.number) : parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.number),
+                    metric: stats.time ? parseInt(stats.time) : parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,
                     userId: user.uid
                   });
@@ -171,11 +171,11 @@ const LogWorkout = () => {
                   await addDoc(collection(firestore, 'exerciseStats'), {
                     exerciseId,
                     setNumber: i + 1,
-                    reps: stats.reps,
+                    reps: stats.reps ? stats.reps : 0,
                     weight: stats.weight ? stats.weight : 0,
                     time: stats.time ? stats.time : 0,
-                    volume: parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.sets[0].number),
-                    metric: parseInt(stats.reps) * parseInt(stats.weight),
+                    volume: stats.time ? parseInt(stats.time) * parseInt(group.number) : parseInt(stats.reps) * parseInt(stats.weight) * parseInt(group.sets[0].number),
+                    metric: stats.time ? parseInt(stats.time) : parseInt(stats.reps) * parseInt(stats.weight),
                     date: workoutDate,
                     userId: user.uid
                   });

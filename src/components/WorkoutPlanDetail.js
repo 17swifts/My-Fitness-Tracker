@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Typography,
   Box,
@@ -149,8 +149,17 @@ const WorkoutPlanDetail = () => {
   }
 
   return (
-    <Box className="workout-detail-container">
-      <IconButton className="back-button" onClick={() => navigate(-1)}>
+    <Box p={3} className="workout-detail-container">
+      <IconButton
+        className="back-button"
+        onClick={() => navigate(-1)}
+        sx={{
+          position: 'absolute',
+          top: '85px',
+          left: '320px',
+          zIndex: '1000',
+        }}
+      >
         <ArrowBackIcon />
       </IconButton>
       <Typography variant="h4" gutterBottom>

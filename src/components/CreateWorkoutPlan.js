@@ -20,6 +20,7 @@ const CreateWorkoutPlan = () => {
   const [isEditing, setIsEditing] = useState(false);  // Track if we're editing an existing plan
   const [loading, setLoading] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);  // New state to control save modal
 
   useEffect(() => {
     if (id) {
@@ -87,7 +88,7 @@ const CreateWorkoutPlan = () => {
             sets: group.sets.map(exercise => ({
               number: group.isSuperSet ? null : exercise.number,
               reps: exercise.reps,
-              time: exercise.time ? exercise.time: 0,
+              time: exercise.time ? exercise.time : 0,
               exerciseId: exercise.exerciseId,
               notes: exercise.notes ? exercise.notes : ''
             }))
@@ -96,18 +97,51 @@ const CreateWorkoutPlan = () => {
 
         if (isEditing) {
           // Update existing plan
-          await updateDoc(doc(firestore, 'workoutPlans', id), planData);
+          setShowSaveModal(true);  // Show the modal when editing
         } else {
           // Create new plan
           await addDoc(collection(firestore, 'workoutPlans'), planData);
+          setPlanName('');
+          setSetGroups([]);
+          navigate('/workout-plans');
         }
-        setPlanName('');
-        setSetGroups([]);
-        navigate('/workout-plans');
       }
     } catch (error) {
       console.error('Error creating workout plan:', error);
     }
+  };
+
+  const confirmSaveOption = async (saveAsNew) => {
+    const user = auth.currentUser;
+    const planData = {
+      userId: user.uid,
+      name: planName,
+      instructions: planInstructions ? planInstructions : "",
+      createdDate: dayjs().format('YYYY-MM-DD'),
+      setGroups: setGroups.map((group, index) => ({
+        number: group.isSuperSet ? group.number : null,
+        isSuperSet: group.isSuperSet,
+        sets: group.sets.map(exercise => ({
+          number: group.isSuperSet ? null : exercise.number,
+          reps: exercise.reps,
+          time: exercise.time ? exercise.time : 0,
+          exerciseId: exercise.exerciseId,
+          notes: exercise.notes ? exercise.notes : ''
+        }))
+      }))
+    };
+
+    if (saveAsNew) {
+      // Create a new workout plan
+      await addDoc(collection(firestore, 'workoutPlans'), planData);
+    } else {
+      // Update existing workout plan
+      await updateDoc(doc(firestore, 'workoutPlans', id), planData);
+    }
+
+    setPlanName('');
+    setSetGroups([]);
+    navigate('/workout-plans');
   };
 
   const addExercise = async (exercise) => {
@@ -220,6 +254,10 @@ const CreateWorkoutPlan = () => {
     });
   };
 
+  const handleModalClose = () => {
+    setShowSaveModal(false);
+  };
+
   if (loading) {
     return <Typography>Loading...</Typography>;
   }
@@ -253,6 +291,35 @@ const CreateWorkoutPlan = () => {
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
           <ExerciseLibrary onSelectExercise={addExercise} onClose={() => setIsAddingExercise(false)} />
+        </Box>
+      </Modal>
+
+      {/* Modal for Save as New or Edit Existing */}
+      <Modal open={showSaveModal} onClose={handleModalClose}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Do you want to save this workout as a new workout or update the existing one?
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              confirmSaveOption(false);
+              handleModalClose();
+            }}
+          >
+            Update Existing
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => {
+              confirmSaveOption(true);
+              handleModalClose();
+            }}
+          >
+            Save as New
+          </Button>
         </Box>
       </Modal>
 
@@ -370,7 +437,7 @@ const CreateWorkoutPlan = () => {
           </Droppable>
         </DragDropContext>
       </div>
-      
+
       <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
         Add Exercises
       </Button>

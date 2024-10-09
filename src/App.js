@@ -104,6 +104,7 @@ const App = () => {
               <Route path="/exercise/:exerciseId" element={<ExerciseDetail/>} />
               <Route path="/log-workout/:id" element={<LogWorkout />} />
               <Route path="/log-exercise" element={<LogExercise />} />
+              <Route path="/exercise-library" element={<ExerciseLibrary />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </>
           ) : (

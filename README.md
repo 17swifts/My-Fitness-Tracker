@@ -43,10 +43,10 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 
 - ~Substitute in logged workout~
 - ~Better profile page~
-- Statistics still weirdly loading
+- ~Statistics still weirdly loading
 - ~Generate workout automatically~
 - ~Edit created workout~
-- Fitbit integration
+- ~Fitbit integration
 - Statistics on dashboard using fitbit
 - Calendar activites from fitbit
 - My fitness pal integration
@@ -60,4 +60,6 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 - Back arrow from logged to detail back to wherever
 - ~Timer in log workout~ 
 - ~Search in workout plans~
+- ~Edit workout and save as new option
+- Fix fitbit integration so it doesn't have to connect each time 
 
