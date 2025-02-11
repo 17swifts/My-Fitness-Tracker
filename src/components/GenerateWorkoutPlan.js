@@ -1,55 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Select, MenuItem, Box, Modal, FormControlLabel, Grid, Typography, IconButton, Divider, Switch, Alert } from '@mui/material';
-import { SwapHoriz, Delete } from '@mui/icons-material';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
-import { auth, firestore } from '../firebase';
-import dayjs from 'dayjs';
-import './styles/CreateWorkoutPlan.css';
-import ExerciseLibrary from './ExerciseLibrary';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  Box,
+  Modal,
+  FormControlLabel,
+  Grid,
+  Typography,
+  IconButton,
+  Divider,
+  Switch,
+  Alert,
+} from "@mui/material";
+import { SwapHoriz, Delete } from "@mui/icons-material";
+import { collection, getDocs, addDoc } from "firebase/firestore";
+import { auth, firestore } from "../firebase";
+import dayjs from "dayjs";
+import "./styles/CreateWorkoutPlan.css";
+import ExerciseLibrary from "./ExerciseLibrary";
 
 const GenerateWorkoutPlan = () => {
   const navigate = useNavigate();
-  const [planName, setPlanName] = useState('');
-  const [planInstructions, setPlanInstructions] = useState('');
+  const [planName, setPlanName] = useState("");
+  const [planInstructions, setPlanInstructions] = useState("");
   const [setGroups, setSetGroups] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [muscleGroups, setMuscleGroups] = useState([]);
   const [category, setCategory] = useState([]);
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState("");
   const [equipment, setEquipment] = useState([]);
   const [repRange, setRepRange] = useState([]);
   const [workoutGenerated, setWorkoutGenerated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchExercises = () => {
       return new Promise(async (resolve, reject) => {
         try {
-          const querySnapshot = await getDocs(collection(firestore, 'exercises'));
-          const exerciseList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const querySnapshot = await getDocs(
+            collection(firestore, "exercises")
+          );
+          const exerciseList = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
           resolve(exerciseList);
         } catch (error) {
-          reject('Error fetching exercises:', error);
+          reject("Error fetching exercises:", error);
         }
       });
     };
 
-    fetchExercises().then(exerciseList => {
-      setExercises(exerciseList);
-      setLoading(false); // Indicate that loading is complete
-    }).catch(error => {
-      console.error(error);
-      setLoading(false);
-    });
+    fetchExercises()
+      .then((exerciseList) => {
+        setExercises(exerciseList);
+        setLoading(false); // Indicate that loading is complete
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoading(false);
+      });
   }, []);
 
   const handleSelectionChange = (setter) => (event) => {
     const { value } = event.target;
-    setter(value.includes('All') ? ['All'] : value.filter((v) => v !== 'All'));
+    setter(value.includes("All") ? ["All"] : value.filter((v) => v !== "All"));
   };
 
   const swapExercise = (groupIndex, exerciseIndex) => {
@@ -61,7 +82,8 @@ const GenerateWorkoutPlan = () => {
       repRange: repRange,
     }); // Logic to select a new random exercise based on initial parameters
     const updatedSetGroups = [...setGroups];
-    updatedSetGroups[groupIndex].sets[exerciseIndex].exerciseId = newExercise.id;
+    updatedSetGroups[groupIndex].sets[exerciseIndex].exerciseId =
+      newExercise.id;
     setSetGroups(updatedSetGroups);
   };
 
@@ -78,32 +100,47 @@ const GenerateWorkoutPlan = () => {
       setSetGroups(generatedGroups);
       setWorkoutGenerated(true);
     } catch (error) {
-      console.error('Error generating workout:', error.message);
+      console.error("Error generating workout:", error.message);
     }
   };
 
   const selectRandomExercise = (filters) => {
-    const filteredExercises = exercises.filter(exercise => {
-      const matchesMuscleGroup = !filters.muscleGroups.length || filters.muscleGroups.includes(exercise.muscleGroup) || filters.muscleGroups.includes('All');
-      const matchesCategory = !filters.category.length || filters.category.includes(exercise.category) || filters.category.includes('All');
-      const matchesEquipment = !filters.equipment.length || filters.equipment.includes(exercise.equipment) || filters.equipment.includes('All');
+    const filteredExercises = exercises.filter((exercise) => {
+      const matchesMuscleGroup =
+        !filters.muscleGroups.length ||
+        filters.muscleGroups.includes(exercise.muscleGroup) ||
+        filters.muscleGroups.includes("All");
+      const matchesCategory =
+        !filters.category.length ||
+        filters.category.includes(exercise.category) ||
+        filters.category.includes("All");
+      const matchesEquipment =
+        !filters.equipment.length ||
+        filters.equipment.includes(exercise.equipment) ||
+        filters.equipment.includes("All");
 
       // Check if the exercise is already in setGroups
-      const isAlreadyInSetGroups = setGroups.some(group =>
-        group.sets.some(set => set.exerciseId === exercise.id)
+      const isAlreadyInSetGroups = setGroups.some((group) =>
+        group.sets.some((set) => set.exerciseId === exercise.id)
       );
 
-      return matchesMuscleGroup && matchesCategory && matchesEquipment && !isAlreadyInSetGroups;
+      return (
+        matchesMuscleGroup &&
+        matchesCategory &&
+        matchesEquipment &&
+        !isAlreadyInSetGroups
+      );
     });
 
     if (filteredExercises.length === 0) {
-      throw new Error('No exercises match the selected criteria or all matching exercises have already been added.');
+      throw new Error(
+        "No exercises match the selected criteria or all matching exercises have already been added."
+      );
     }
 
     const randomIndex = Math.floor(Math.random() * filteredExercises.length);
     return filteredExercises[randomIndex];
   };
-
 
   const generateExerciseGroups = (filters) => {
     const groups = [];
@@ -119,18 +156,22 @@ const GenerateWorkoutPlan = () => {
     const regularSetTimeAllocation = 0.4 * totalTime;
 
     const numSuperSets = Math.floor(supersetTimeAllocation / timePerSuperset);
-    const numRegularSets = Math.floor(regularSetTimeAllocation / timePerRegularSet);
+    const numRegularSets = Math.floor(
+      regularSetTimeAllocation / timePerRegularSet
+    );
 
     for (let i = 0; i < numRegularSets; i++) {
       const exercise = selectRandomExercise(filters);
       groups.push({
         isSuperSet: false,
-        sets: [{
-          exerciseId: exercise.id,
-          number: regularSetNumber,
-          reps: filters.repRange,
-          notes: '',
-        }],
+        sets: [
+          {
+            exerciseId: exercise.id,
+            number: regularSetNumber,
+            reps: filters.repRange,
+            notes: "",
+          },
+        ],
       });
     }
 
@@ -142,7 +183,7 @@ const GenerateWorkoutPlan = () => {
           exerciseId: exercise.id,
           number: null,
           reps: filters.repRange,
-          notes: '',
+          notes: "",
         });
       }
       groups.push({
@@ -166,11 +207,11 @@ const GenerateWorkoutPlan = () => {
         userId: user.uid,
         name: planName,
         instructions: planInstructions,
-        createdDate: dayjs().format('YYYY-MM-DD'),
-        setGroups: setGroups.map(group => ({
+        createdDate: dayjs().format("YYYY-MM-DD"),
+        setGroups: setGroups.map((group) => ({
           isSuperSet: group.isSuperSet,
           number: group.number ? group.number : 0,
-          sets: group.sets.map(exercise => ({
+          sets: group.sets.map((exercise) => ({
             exerciseId: exercise.exerciseId,
             reps: exercise.reps,
             number: exercise.number ? exercise.number : 0,
@@ -178,17 +219,19 @@ const GenerateWorkoutPlan = () => {
           })),
         })),
       };
-      await addDoc(collection(firestore, 'workoutPlans'), planData);
+      await addDoc(collection(firestore, "workoutPlans"), planData);
       setSuccessMessage(`Successfully saved workout ${planName}`);
-      navigate('/workout-plans');
+      navigate("/workout-plans");
     }
   };
 
   const toggleSuperSet = (groupIndex) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex].isSuperSet = !newGroups[groupIndex].isSuperSet;
-      newGroups[groupIndex].number = newGroups[groupIndex].isSuperSet ? 1 : null;
+      newGroups[groupIndex].number = newGroups[groupIndex].isSuperSet
+        ? 1
+        : null;
       return newGroups;
     });
   };
@@ -197,8 +240,8 @@ const GenerateWorkoutPlan = () => {
     setLoading(true);
 
     // Update the setGroups state next
-    await new Promise(resolve => {
-      setSetGroups(prevGroups => {
+    await new Promise((resolve) => {
+      setSetGroups((prevGroups) => {
         const newGroups = [...prevGroups];
         if (currentGroupIndex !== null) {
           newGroups[currentGroupIndex].sets.push({
@@ -206,18 +249,20 @@ const GenerateWorkoutPlan = () => {
             number: 0,
             reps: 0,
             time: 0,
-            notes: ''
+            notes: "",
           });
         } else {
           newGroups.push({
             isSuperSet: false,
-            sets: [{
-              exerciseId: exercise.id,
-              number: 0,
-              reps: 0,
-              time: 0,
-              notes: ''
-            }]
+            sets: [
+              {
+                exerciseId: exercise.id,
+                number: 0,
+                reps: 0,
+                time: 0,
+                notes: "",
+              },
+            ],
           });
         }
         resolve(newGroups); // Resolve the promise after the state is updated
@@ -230,7 +275,7 @@ const GenerateWorkoutPlan = () => {
   };
 
   const updateExercise = (groupIndex, exerciseIndex, field, value) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex].sets[exerciseIndex][field] = value;
       return newGroups;
@@ -238,7 +283,7 @@ const GenerateWorkoutPlan = () => {
   };
 
   const updateGroup = (groupIndex, field, value) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex][field] = value;
       return newGroups;
@@ -246,7 +291,7 @@ const GenerateWorkoutPlan = () => {
   };
 
   const removeExercise = (groupIndex, exerciseIndex, exerciseId) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
 
       // Remove the exercise from the group
@@ -270,8 +315,24 @@ const GenerateWorkoutPlan = () => {
       <Typography variant="h4">Generate Workout Plan</Typography>
 
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
-          <ExerciseLibrary onSelectExercise={addExercise} onClose={() => setIsAddingExercise(false)} />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            height: "80%",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            overflowY: "auto",
+            p: 4,
+          }}
+        >
+          <ExerciseLibrary
+            onSelectExercise={addExercise}
+            onClose={() => setIsAddingExercise(false)}
+          />
         </Box>
       </Modal>
 
@@ -291,9 +352,29 @@ const GenerateWorkoutPlan = () => {
             onChange={handleSelectionChange(setMuscleGroups)}
             fullWidth
             displayEmpty
-            renderValue={(selected) => (selected.length === 0 ? <span style={{ color: '#aaa' }}>Muscle Groups</span> : selected.join(", "))}
+            renderValue={(selected) =>
+              selected.length === 0 ? (
+                <span style={{ color: "#aaa" }}>Muscle Groups</span>
+              ) : (
+                selected.join(", ")
+              )
+            }
           >
-            {["All", "Full Body", "Back", "Chest", "Biceps", "Shoulders", "Core", "Triceps", "Quads", "Hamstrings", "Calves", "Cardio", "Forearm"].map((option) => (
+            {[
+              "All",
+              "Full Body",
+              "Back",
+              "Chest",
+              "Biceps",
+              "Shoulders",
+              "Core",
+              "Triceps",
+              "Quads",
+              "Hamstrings",
+              "Calves",
+              "Cardio",
+              "Forearm",
+            ].map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -307,9 +388,24 @@ const GenerateWorkoutPlan = () => {
             onChange={handleSelectionChange(setCategory)}
             fullWidth
             displayEmpty
-            renderValue={(selected) => (selected.length === 0 ? <span style={{ color: '#aaa' }}>Category</span> : selected.join(", "))}
+            renderValue={(selected) =>
+              selected.length === 0 ? (
+                <span style={{ color: "#aaa" }}>Category</span>
+              ) : (
+                selected.join(", ")
+              )
+            }
           >
-            {["All", "Push", "Pull", "Lunge", "Squat", "Gait", "Hinge", "Twist"].map((option) => (
+            {[
+              "All",
+              "Push",
+              "Pull",
+              "Lunge",
+              "Squat",
+              "Gait",
+              "Hinge",
+              "Twist",
+            ].map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -331,9 +427,25 @@ const GenerateWorkoutPlan = () => {
             onChange={handleSelectionChange(setEquipment)}
             fullWidth
             displayEmpty
-            renderValue={(selected) => (selected.length === 0 ? <span style={{ color: '#aaa' }}>Equipment</span> : selected.join(", "))}
+            renderValue={(selected) =>
+              selected.length === 0 ? (
+                <span style={{ color: "#aaa" }}>Equipment</span>
+              ) : (
+                selected.join(", ")
+              )
+            }
           >
-            {["All", "Body Weight", "Dumbbell", "Barbell", "Bench", "Met Ball", "AB Wheel", "Machine", "Box"].map((option) => (
+            {[
+              "All",
+              "Body Weight",
+              "Dumbbell",
+              "Barbell",
+              "Bench",
+              "Met Ball",
+              "AB Wheel",
+              "Machine",
+              "Box",
+            ].map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -349,7 +461,7 @@ const GenerateWorkoutPlan = () => {
           >
             {/* Placeholder item */}
             <MenuItem value="" disabled>
-            <span style={{ color: '#aaa' }}>Rep Range</span>
+              <span style={{ color: "#aaa" }}>Rep Range</span>
             </MenuItem>
             {/* Actual options */}
             {[...Array(13).keys()].map((i) => (
@@ -379,25 +491,44 @@ const GenerateWorkoutPlan = () => {
             multiline
             margin="normal"
             rows={5}
-            value={planInstructions.toString().replace(new RegExp("<br>", "g"), '\n')}
+            value={planInstructions
+              .toString()
+              .replace(new RegExp("<br>", "g"), "\n")}
             onChange={(e) => {
-              const formattedText = e.target.value.replace(/\n/g, '<br>');
+              const formattedText = e.target.value.replace(/\n/g, "<br>");
               setPlanInstructions(formattedText);
             }}
           />
-          <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setIsAddingExercise(true);
+              setCurrentGroupIndex(null);
+            }}
+          >
             Add Exercises
           </Button>
           <div>
             {setGroups.map((group, groupIndex) => (
               <React.Fragment key={groupIndex}>
-                <Grid container spacing={2} alignItems="center" className='grid-container'>
+                <Grid
+                  container
+                  spacing={2}
+                  alignItems="center"
+                  className="grid-container"
+                >
                   <Grid item xs={3}>
                     {group.isSuperSet ? (
-                      <TextField label="Sets" type="number"
+                      <TextField
+                        label="Sets"
+                        type="number"
                         value={group.number}
-                        onChange={(e) => updateGroup(groupIndex, 'number', e.target.value)}
-                        fullWidth />
+                        onChange={(e) =>
+                          updateGroup(groupIndex, "number", e.target.value)
+                        }
+                        fullWidth
+                      />
                     ) : null}
                   </Grid>
                   <Grid item xs={9}>
@@ -417,59 +548,143 @@ const GenerateWorkoutPlan = () => {
                     <React.Fragment key={exerciseIndex}>
                       <Grid item xs={2}>
                         <img
-                          src={`../${exercises.find(e => e.id === exercise.exerciseId)?.imageUrl}`}
-                          alt={exercises.find(e => e.id === exercise.exerciseId)?.name}
-                          style={{ width: '80%' }}
+                          src={`../${
+                            exercises.find((e) => e.id === exercise.exerciseId)
+                              ?.imageUrl
+                          }`}
+                          alt={
+                            exercises.find((e) => e.id === exercise.exerciseId)
+                              ?.name
+                          }
+                          style={{ width: "80%" }}
                         />
                       </Grid>
                       {!group.isSuperSet ? (
                         <Grid item xs={2}>
-                          <Typography>{exercises.find(e => e.id === exercise.exerciseId)?.name}</Typography>
+                          <Typography>
+                            {
+                              exercises.find(
+                                (e) => e.id === exercise.exerciseId
+                              )?.name
+                            }
+                          </Typography>
                         </Grid>
-                      ) :
+                      ) : (
                         <Grid item xs={3}>
-                          <Typography>{exercises.find(e => e.id === exercise.exerciseId)?.name}</Typography>
+                          <Typography>
+                            {
+                              exercises.find(
+                                (e) => e.id === exercise.exerciseId
+                              )?.name
+                            }
+                          </Typography>
                         </Grid>
-                      }
+                      )}
                       {!group.isSuperSet && (
                         <Grid item xs={2}>
-                          <TextField label="Sets" type="number" value={exercise.number}
-                            onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
-                            fullWidth />
+                          <TextField
+                            label="Sets"
+                            type="number"
+                            value={exercise.number}
+                            onChange={(e) =>
+                              updateExercise(
+                                groupIndex,
+                                exerciseIndex,
+                                "number",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                          />
                         </Grid>
                       )}
                       {!exercises[exercise.exerciseId]?.timed ? (
                         <Grid item xs={2}>
-                          <TextField label="Reps" type="number" value={exercise.reps}
-                            onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
-                            fullWidth />
+                          <TextField
+                            label="Reps"
+                            type="number"
+                            value={exercise.reps}
+                            onChange={(e) =>
+                              updateExercise(
+                                groupIndex,
+                                exerciseIndex,
+                                "reps",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                          />
                         </Grid>
                       ) : (
                         <Grid item xs={2}>
-                          <TextField label="Time (s)" type="number" value={exercise.time}
-                            onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'time', e.target.value)}
-                            fullWidth />
+                          <TextField
+                            label="Time (s)"
+                            type="number"
+                            value={exercise.time}
+                            onChange={(e) =>
+                              updateExercise(
+                                groupIndex,
+                                exerciseIndex,
+                                "time",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                          />
                         </Grid>
                       )}
                       {!group.isSuperSet ? (
                         <Grid item xs={2}>
-                          <TextField label="Notes" value={exercise.notes}
-                            onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                            fullWidth />
+                          <TextField
+                            label="Notes"
+                            value={exercise.notes}
+                            onChange={(e) =>
+                              updateExercise(
+                                groupIndex,
+                                exerciseIndex,
+                                "notes",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                          />
                         </Grid>
-                      ) :
+                      ) : (
                         <Grid item xs={3}>
-                          <TextField label="Notes" value={exercise.notes}
-                            onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                            fullWidth />
-                        </Grid>}
+                          <TextField
+                            label="Notes"
+                            value={exercise.notes}
+                            onChange={(e) =>
+                              updateExercise(
+                                groupIndex,
+                                exerciseIndex,
+                                "notes",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                          />
+                        </Grid>
+                      )}
                       <Grid item xs={1}>
-                        <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)}>
+                        <IconButton
+                          onClick={() =>
+                            removeExercise(
+                              groupIndex,
+                              exerciseIndex,
+                              exercise.exerciseId
+                            )
+                          }
+                        >
                           <Delete />
                         </IconButton>
                       </Grid>
                       <Grid item>
-                        <IconButton onClick={() => swapExercise(groupIndex, exerciseIndex)}>
+                        <IconButton
+                          onClick={() =>
+                            swapExercise(groupIndex, exerciseIndex)
+                          }
+                        >
                           <SwapHoriz />
                         </IconButton>
                       </Grid>
@@ -477,13 +692,20 @@ const GenerateWorkoutPlan = () => {
                   ))}
                   {group.isSuperSet && (
                     <Grid item xs={12}>
-                      <Button variant="outlined" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(groupIndex); }}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => {
+                          setIsAddingExercise(true);
+                          setCurrentGroupIndex(groupIndex);
+                        }}
+                      >
                         Add Another Exercise to Super Set
                       </Button>
                     </Grid>
                   )}
                 </Grid>
-                <Divider style={{ margin: '20px 0' }} />
+                <Divider style={{ margin: "20px 0" }} />
               </React.Fragment>
             ))}
           </div>

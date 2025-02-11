@@ -1,18 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, MenuItem, Select, Snackbar, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Box,
+  Typography,
+  MenuItem,
+  Select,
+  Snackbar,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const Timer = ({ onClose }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerFinished, setTimerFinished] = useState(false);
-  const intervalRef = useRef(null);  // Store the interval ID
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     if (timerRunning && countdown > 0) {
       intervalRef.current = setInterval(() => {
-        setCountdown(prevCountdown => prevCountdown - 1);
+        setCountdown((prevCountdown) => prevCountdown - 1);
       }, 1000);
     }
 
@@ -37,10 +44,18 @@ const Timer = ({ onClose }) => {
   };
 
   return (
-    <Box sx={{ mt: 2, p: 2, borderRadius: 2, backgroundColor: '#f5f5f5', boxShadow: 2 }}>
+    <Box
+      sx={{
+        mt: 2,
+        p: 2,
+        borderRadius: 2,
+        backgroundColor: "#f5f5f5",
+        boxShadow: 2,
+      }}
+    >
       {!timerRunning && (
         <Select
-          value={selectedTime || ''}
+          value={selectedTime || ""}
           displayEmpty
           onChange={handleTimeSelect}
           sx={{ width: 120, mr: 2 }}
@@ -61,8 +76,9 @@ const Timer = ({ onClose }) => {
         </Select>
       )}
       {timerRunning && (
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          Time Left: {Math.floor(countdown / 60)}:{countdown % 60 < 10 ? `0${countdown % 60}` : countdown % 60}s
+        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          Time Left: {Math.floor(countdown / 60)}:
+          {countdown % 60 < 10 ? `0${countdown % 60}` : countdown % 60}s
         </Typography>
       )}
       <Snackbar
@@ -70,7 +86,11 @@ const Timer = ({ onClose }) => {
         autoHideDuration={6000}
         message="Timer Finished"
         action={
-          <IconButton size="small" color="inherit" onClick={() => setTimerFinished(false)}>
+          <IconButton
+            size="small"
+            color="inherit"
+            onClick={() => setTimerFinished(false)}
+          >
             <CloseIcon fontSize="small" />
           </IconButton>
         }

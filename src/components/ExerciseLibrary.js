@@ -1,18 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { collection, query, getDocs, addDoc } from 'firebase/firestore';
-import { useAuth } from '../hooks/useAuth';  // Custom hook to get current user
-import { TextField, Select, MenuItem, Button, Typography, IconButton, Box, List, ListItem, ListItemText, ListItemAvatar, Avatar, Collapse } from '@mui/material';
-import { Add, FilterList } from '@mui/icons-material';
-import './styles/ExerciseLibrary.css';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import { collection, query, getDocs, addDoc } from "firebase/firestore";
+import { useAuth } from "../hooks/useAuth"; // Custom hook to get current user
+import {
+  TextField,
+  Select,
+  MenuItem,
+  Button,
+  Typography,
+  IconButton,
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Collapse,
+} from "@mui/material";
+import { Add, FilterList } from "@mui/icons-material";
+import "./styles/ExerciseLibrary.css";
 
 const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
   const [exercises, setExercises] = useState([]);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('');
-  const [filter2, setFilter2] = useState('');
-  const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: '', imageUrl: '', videoUrl: '' });
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("");
+  const [filter2, setFilter2] = useState("");
+  const [newExercise, setNewExercise] = useState({
+    name: "",
+    muscleGroup: "",
+    imageUrl: "",
+    videoUrl: "",
+  });
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
@@ -22,36 +41,51 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
   }, []);
 
   const fetchExercises = async () => {
-    const q = query(collection(firestore, 'exercises'));
+    const q = query(collection(firestore, "exercises"));
     const querySnapshot = await getDocs(q);
-    const exercisesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const exercisesData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     setExercises(exercisesData);
   };
 
   const handleAddExercise = async () => {
     try {
-      await addDoc(collection(firestore, 'exercises'), {
+      await addDoc(collection(firestore, "exercises"), {
         ...newExercise,
-        userId: user.uid
+        userId: user.uid,
       });
-      setNewExercise({ name: '', muscleGroup: '', imageUrl: '', videoUrl: '' });
-      fetchExercises();  // Refetch exercises after adding a new one
+      setNewExercise({ name: "", muscleGroup: "", imageUrl: "", videoUrl: "" });
+      fetchExercises(); // Refetch exercises after adding a new one
     } catch (error) {
-      console.error('Error adding exercise:', error);
+      console.error("Error adding exercise:", error);
     }
   };
 
-  const filteredExercises = exercises.filter(exercise =>
-    exercise.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!filter || exercise.muscleGroup === filter) &&
-    (!filter2 || exercise.category === filter2)
+  const filteredExercises = exercises.filter(
+    (exercise) =>
+      exercise.name.toLowerCase().includes(search.toLowerCase()) &&
+      (!filter || exercise.muscleGroup === filter) &&
+      (!filter2 || exercise.category === filter2)
   );
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto', p: 2 }}>
+    <Box
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflowY: "auto",
+        p: 2,
+      }}
+    >
       <Typography variant="h4" gutterBottom>
         Exercise Library
-        <IconButton color="primary" onClick={() => setIsAddingExercise(!isAddingExercise)}>
+        <IconButton
+          color="primary"
+          onClick={() => setIsAddingExercise(!isAddingExercise)}
+        >
           <Add />
         </IconButton>
         <IconButton color="primary" onClick={() => setFilterOpen(!filterOpen)}>
@@ -64,18 +98,29 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
           variant="contained"
           color="primary"
           onClick={() => onSelectExercise(selectedExercise)}
-          sx={{ position: 'sticky', top: 0, right: 0, mb: 2, zIndex: 1000 }}
+          sx={{ position: "sticky", top: 0, right: 0, mb: 2, zIndex: 1000 }}
         >
           Add
         </Button>
       )}
 
-      <TextField value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Exercises" fullWidth />
+      <TextField
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search Exercises"
+        fullWidth
+      />
 
       {/* Filter Section */}
       <Collapse in={filterOpen}>
         <Box sx={{ mb: 2 }}>
-          <Select value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Muscle Group" displayEmpty fullWidth>
+          <Select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Muscle Group"
+            displayEmpty
+            fullWidth
+          >
             <MenuItem value="">All</MenuItem>
             {/* ... Muscle Groups */}
             <MenuItem value="Back">Back</MenuItem>
@@ -92,7 +137,13 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
             <MenuItem value="Cardio">Cardio</MenuItem>
             <MenuItem value="Forearm">Forearm</MenuItem>
           </Select>
-          <Select value={filter2} onChange={(e) => setFilter2(e.target.value)} placeholder="Category" displayEmpty fullWidth>
+          <Select
+            value={filter2}
+            onChange={(e) => setFilter2(e.target.value)}
+            placeholder="Category"
+            displayEmpty
+            fullWidth
+          >
             <MenuItem value="">All</MenuItem>
             {/* ... Exercise Categories */}
             <MenuItem value="Push">Push</MenuItem>
@@ -109,35 +160,94 @@ const ExerciseLibrary = ({ onSelectExercise, onClose }) => {
       {/* List format for exercises */}
       <List sx={{ mt: 2 }}>
         {filteredExercises.map((exercise, index) => (
-          <Box onClick={() => setSelectedExercise(exercise)} sx={{ border: selectedExercise?.id === exercise.id ? '2px solid blue' : 'none', padding: '8px', cursor: 'pointer' }}>
+          <Box
+            onClick={() => setSelectedExercise(exercise)}
+            sx={{
+              border:
+                selectedExercise?.id === exercise.id
+                  ? "2px solid blue"
+                  : "none",
+              padding: "8px",
+              cursor: "pointer",
+            }}
+          >
             <ListItem key={index}>
               <ListItemAvatar>
                 <Avatar alt={exercise.name} src={`../${exercise.imageUrl}`} />
               </ListItemAvatar>
-              <ListItemText primary={exercise.name} secondary={exercise.muscleGroup} />
+              <ListItemText
+                primary={exercise.name}
+                secondary={exercise.muscleGroup}
+              />
             </ListItem>
           </Box>
-
         ))}
       </List>
 
       {isAddingExercise && (
         <form onSubmit={handleAddExercise}>
           {/* Fields for adding new exercise */}
-          <TextField label="Name" value={newExercise.name} onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })} fullWidth margin="normal" />
-          <TextField label="Muscle Group" value={newExercise.muscleGroup} onChange={(e) => setNewExercise({ ...newExercise, muscleGroup: e.target.value })} fullWidth margin="normal" />
-          <TextField label="Image URL" value={newExercise.imageUrl} onChange={(e) => setNewExercise({ ...newExercise, imageUrl: e.target.value })} fullWidth margin="normal" />
-          <TextField label="Video URL" value={newExercise.videoUrl} onChange={(e) => setNewExercise({ ...newExercise, videoUrl: e.target.value })} fullWidth margin="normal" />
-          <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+          <TextField
+            label="Name"
+            value={newExercise.name}
+            onChange={(e) =>
+              setNewExercise({ ...newExercise, name: e.target.value })
+            }
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Muscle Group"
+            value={newExercise.muscleGroup}
+            onChange={(e) =>
+              setNewExercise({ ...newExercise, muscleGroup: e.target.value })
+            }
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Image URL"
+            value={newExercise.imageUrl}
+            onChange={(e) =>
+              setNewExercise({ ...newExercise, imageUrl: e.target.value })
+            }
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Video URL"
+            value={newExercise.videoUrl}
+            onChange={(e) =>
+              setNewExercise({ ...newExercise, videoUrl: e.target.value })
+            }
+            fullWidth
+            margin="normal"
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            sx={{ mt: 2 }}
+          >
             Add Exercise
           </Button>
-          <Button variant="contained" color="secondary" onClick={() => setIsAddingExercise(!isAddingExercise)} sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => setIsAddingExercise(!isAddingExercise)}
+            sx={{ mt: 2 }}
+          >
             Cancel
           </Button>
         </form>
       )}
 
-      <Button variant="contained" color="primary" onClick={onClose} sx={{ mt: 2 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={onClose}
+        sx={{ mt: 2 }}
+      >
         Back
       </Button>
     </Box>

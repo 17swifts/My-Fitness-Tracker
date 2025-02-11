@@ -1,33 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { auth, firestore } from '../firebase';
-import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Button, TextField, Typography, Grid, IconButton, Modal, Box, Divider, FormControlLabel, Switch } from '@mui/material';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import ExerciseLibrary from './ExerciseLibrary';
-import { Delete } from '@mui/icons-material';
-import dayjs from 'dayjs';
-import './styles/CreateWorkoutPlan.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { auth, firestore } from "../firebase";
+import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  Button,
+  TextField,
+  Typography,
+  Grid,
+  IconButton,
+  Modal,
+  Box,
+  Divider,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import ExerciseLibrary from "./ExerciseLibrary";
+import { Delete } from "@mui/icons-material";
+import dayjs from "dayjs";
+import "./styles/CreateWorkoutPlan.css";
 
 const CreateWorkoutPlan = () => {
   const navigate = useNavigate();
-  const { id } = useParams();  // Get the workout plan ID from the URL
-  const [planName, setPlanName] = useState('');
-  const [planInstructions, setPlanInstructions] = useState('');
+  const { id } = useParams();
+  const [planName, setPlanName] = useState("");
+  const [planInstructions, setPlanInstructions] = useState("");
   const [setGroups, setSetGroups] = useState([]);
   const [exercises, setExercises] = useState({});
   const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);  // Track if we're editing an existing plan
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
-  const [showSaveModal, setShowSaveModal] = useState(false);  // New state to control save modal
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   useEffect(() => {
     if (id) {
       setLoading(true);
       const fetchPlanDetails = async () => {
         try {
-          const docRef = doc(firestore, 'workoutPlans', id);
+          const docRef = doc(firestore, "workoutPlans", id);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const planData = docSnap.data();
@@ -38,23 +49,27 @@ const CreateWorkoutPlan = () => {
             setIsEditing(true);
           }
         } catch (error) {
-          console.error('Error fetching plan details:', error);
+          console.error("Error fetching plan details:", error);
         }
       };
 
       const fetchExerciseDetails = async (planData) => {
         try {
           const exerciseIds = new Set();
-          planData.setGroups.forEach(group => {
-            group.sets.forEach(set => {
+          planData.setGroups.forEach((group) => {
+            group.sets.forEach((set) => {
               exerciseIds.add(set.exerciseId);
             });
           });
 
-          const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
-            const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
-            return { id: exerciseId, data: exerciseDoc.data() };
-          });
+          const exercisePromises = Array.from(exerciseIds).map(
+            async (exerciseId) => {
+              const exerciseDoc = await getDoc(
+                doc(firestore, "exercises", exerciseId)
+              );
+              return { id: exerciseId, data: exerciseDoc.data() };
+            }
+          );
 
           const exerciseResults = await Promise.all(exercisePromises);
           const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
@@ -65,7 +80,7 @@ const CreateWorkoutPlan = () => {
           setExercises(exerciseData);
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching exercises:', error);
+          console.error("Error fetching exercises:", error);
         }
       };
 
@@ -81,33 +96,33 @@ const CreateWorkoutPlan = () => {
           userId: user.uid,
           name: planName,
           instructions: planInstructions ? planInstructions : "",
-          createdDate: dayjs().format('YYYY-MM-DD'),
+          createdDate: dayjs().format("YYYY-MM-DD"),
           setGroups: setGroups.map((group, index) => ({
             number: group.isSuperSet ? group.number : null,
             isSuperSet: group.isSuperSet,
-            sets: group.sets.map(exercise => ({
+            sets: group.sets.map((exercise) => ({
               number: group.isSuperSet ? null : exercise.number,
               reps: exercise.reps,
               time: exercise.time ? exercise.time : 0,
               exerciseId: exercise.exerciseId,
-              notes: exercise.notes ? exercise.notes : ''
-            }))
-          }))
+              notes: exercise.notes ? exercise.notes : "",
+            })),
+          })),
         };
 
         if (isEditing) {
           // Update existing plan
-          setShowSaveModal(true);  // Show the modal when editing
+          setShowSaveModal(true); // Show the modal when editing
         } else {
           // Create new plan
-          await addDoc(collection(firestore, 'workoutPlans'), planData);
-          setPlanName('');
+          await addDoc(collection(firestore, "workoutPlans"), planData);
+          setPlanName("");
           setSetGroups([]);
-          navigate('/workout-plans');
+          navigate("/workout-plans");
         }
       }
     } catch (error) {
-      console.error('Error creating workout plan:', error);
+      console.error("Error creating workout plan:", error);
     }
   };
 
@@ -117,45 +132,45 @@ const CreateWorkoutPlan = () => {
       userId: user.uid,
       name: planName,
       instructions: planInstructions ? planInstructions : "",
-      createdDate: dayjs().format('YYYY-MM-DD'),
+      createdDate: dayjs().format("YYYY-MM-DD"),
       setGroups: setGroups.map((group, index) => ({
         number: group.isSuperSet ? group.number : null,
         isSuperSet: group.isSuperSet,
-        sets: group.sets.map(exercise => ({
+        sets: group.sets.map((exercise) => ({
           number: group.isSuperSet ? null : exercise.number,
           reps: exercise.reps,
           time: exercise.time ? exercise.time : 0,
           exerciseId: exercise.exerciseId,
-          notes: exercise.notes ? exercise.notes : ''
-        }))
-      }))
+          notes: exercise.notes ? exercise.notes : "",
+        })),
+      })),
     };
 
     if (saveAsNew) {
       // Create a new workout plan
-      await addDoc(collection(firestore, 'workoutPlans'), planData);
+      await addDoc(collection(firestore, "workoutPlans"), planData);
     } else {
       // Update existing workout plan
-      await updateDoc(doc(firestore, 'workoutPlans', id), planData);
+      await updateDoc(doc(firestore, "workoutPlans", id), planData);
     }
 
-    setPlanName('');
+    setPlanName("");
     setSetGroups([]);
-    navigate('/workout-plans');
+    navigate("/workout-plans");
   };
 
   const addExercise = async (exercise) => {
     setLoading(true);
     // Add the exercise to the exercises list first
-    await new Promise(resolve => {
-      setExercises(prevExercises => {
+    await new Promise((resolve) => {
+      setExercises((prevExercises) => {
         const newExercises = { ...prevExercises };
         newExercises[exercise.id] = {
           description: exercise.description,
           imageUrl: exercise.imageUrl,
           muscleGroup: exercise.muscleGroup,
           equipment: exercise.equipment,
-          name: exercise.name
+          name: exercise.name,
         };
         resolve(newExercises);
         return newExercises;
@@ -163,8 +178,8 @@ const CreateWorkoutPlan = () => {
     });
 
     // Update the setGroups state next
-    await new Promise(resolve => {
-      setSetGroups(prevGroups => {
+    await new Promise((resolve) => {
+      setSetGroups((prevGroups) => {
         const newGroups = [...prevGroups];
         if (currentGroupIndex !== null) {
           newGroups[currentGroupIndex].sets.push({
@@ -172,18 +187,20 @@ const CreateWorkoutPlan = () => {
             number: 0,
             reps: 0,
             time: 0,
-            notes: ''
+            notes: "",
           });
         } else {
           newGroups.push({
             isSuperSet: false,
-            sets: [{
-              exerciseId: exercise.id,
-              number: 0,
-              reps: 0,
-              time: 0,
-              notes: ''
-            }]
+            sets: [
+              {
+                exerciseId: exercise.id,
+                number: 0,
+                reps: 0,
+                time: 0,
+                notes: "",
+              },
+            ],
           });
         }
         resolve(newGroups); // Resolve the promise after the state is updated
@@ -200,7 +217,7 @@ const CreateWorkoutPlan = () => {
 
     const { source, destination } = result;
 
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       const [movedSetGroup] = newGroups.splice(source.index, 1);
       newGroups.splice(destination.index, 0, movedSetGroup);
@@ -209,7 +226,7 @@ const CreateWorkoutPlan = () => {
   };
 
   const updateExercise = (groupIndex, exerciseIndex, field, value) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex].sets[exerciseIndex][field] = value;
       return newGroups;
@@ -217,7 +234,7 @@ const CreateWorkoutPlan = () => {
   };
 
   const updateGroup = (groupIndex, field, value) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex][field] = value;
       return newGroups;
@@ -225,7 +242,7 @@ const CreateWorkoutPlan = () => {
   };
 
   const removeExercise = (groupIndex, exerciseIndex, exerciseId) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
 
       // Remove the exercise from the group
@@ -239,17 +256,19 @@ const CreateWorkoutPlan = () => {
       return newGroups;
     });
 
-    setExercises(prevExercises => {
+    setExercises((prevExercises) => {
       const { [exerciseId]: _, ...newExercises } = prevExercises; // Remove the exercise using destructuring
       return newExercises;
     });
   };
 
   const toggleSuperSet = (groupIndex) => {
-    setSetGroups(prevGroups => {
+    setSetGroups((prevGroups) => {
       const newGroups = [...prevGroups];
       newGroups[groupIndex].isSuperSet = !newGroups[groupIndex].isSuperSet;
-      newGroups[groupIndex].number = newGroups[groupIndex].isSuperSet ? 1 : null;
+      newGroups[groupIndex].number = newGroups[groupIndex].isSuperSet
+        ? 1
+        : null;
       return newGroups;
     });
   };
@@ -265,7 +284,7 @@ const CreateWorkoutPlan = () => {
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
-        {isEditing ? 'Edit Workout Plan' : 'Create Workout Plan'}
+        {isEditing ? "Edit Workout Plan" : "Create Workout Plan"}
       </Typography>
       <TextField
         label="Plan Name"
@@ -281,24 +300,56 @@ const CreateWorkoutPlan = () => {
         multiline
         margin="normal"
         rows={5}
-        value={planInstructions.toString().replace(new RegExp("<br>", "g"), '\n')}
+        value={planInstructions
+          .toString()
+          .replace(new RegExp("<br>", "g"), "\n")}
         onChange={(e) => {
-          const formattedText = e.target.value.replace(/\n/g, '<br>');
+          const formattedText = e.target.value.replace(/\n/g, "<br>");
           setPlanInstructions(formattedText);
         }}
       />
 
       <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
-          <ExerciseLibrary onSelectExercise={addExercise} onClose={() => setIsAddingExercise(false)} />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            height: "80%",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            overflowY: "auto",
+            p: 4,
+          }}
+        >
+          <ExerciseLibrary
+            onSelectExercise={addExercise}
+            onClose={() => setIsAddingExercise(false)}
+          />
         </Box>
       </Modal>
 
       {/* Modal for Save as New or Edit Existing */}
       <Modal open={showSaveModal} onClose={handleModalClose}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', height: '80%', bgcolor: 'background.paper', boxShadow: 24, overflowY: 'auto', p: 4 }}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            height: "80%",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            overflowY: "auto",
+            p: 4,
+          }}
+        >
           <Typography variant="h6" gutterBottom>
-            Do you want to save this workout as a new workout or update the existing one?
+            Do you want to save this workout as a new workout or update the
+            existing one?
           </Typography>
           <Button
             variant="contained"
@@ -329,7 +380,11 @@ const CreateWorkoutPlan = () => {
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>
                 {setGroups.map((group, groupIndex) => (
-                  <Draggable key={`${groupIndex}`} draggableId={`${groupIndex}`} index={groupIndex}>
+                  <Draggable
+                    key={`${groupIndex}`}
+                    draggableId={`${groupIndex}`}
+                    index={groupIndex}
+                  >
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
@@ -337,13 +392,27 @@ const CreateWorkoutPlan = () => {
                         {...provided.dragHandleProps}
                       >
                         <React.Fragment key={groupIndex}>
-                          <Grid container spacing={2} alignItems="center" className='grid-container'>
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            className="grid-container"
+                          >
                             <Grid item xs={3}>
                               {group.isSuperSet ? (
-                                <TextField label="Sets" type="number"
+                                <TextField
+                                  label="Sets"
+                                  type="number"
                                   value={group.number}
-                                  onChange={(e) => updateGroup(groupIndex, 'number', e.target.value)}
-                                  fullWidth />
+                                  onChange={(e) =>
+                                    updateGroup(
+                                      groupIndex,
+                                      "number",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
                               ) : null}
                             </Grid>
                             <Grid item xs={9}>
@@ -364,55 +433,123 @@ const CreateWorkoutPlan = () => {
                                 <Grid item xs={2}>
                                   {exercises[exercise.exerciseId] && (
                                     <img
-                                      src={`../${exercises[exercise.exerciseId].imageUrl}`}
+                                      src={`../${
+                                        exercises[exercise.exerciseId].imageUrl
+                                      }`}
                                       alt={exercises[exercise.exerciseId].name}
-                                      style={{ width: '80%' }}
+                                      style={{ width: "80%" }}
                                     />
                                   )}
                                 </Grid>
                                 {!group.isSuperSet ? (
                                   <Grid item xs={2}>
-                                    <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                                    <Typography>
+                                      {exercises[exercise.exerciseId]?.name}
+                                    </Typography>
                                   </Grid>
-                                ) :
+                                ) : (
                                   <Grid item xs={3}>
-                                    <Typography>{exercises[exercise.exerciseId]?.name}</Typography>
+                                    <Typography>
+                                      {exercises[exercise.exerciseId]?.name}
+                                    </Typography>
                                   </Grid>
-                                }
+                                )}
                                 {!group.isSuperSet && (
                                   <Grid item xs={2}>
-                                    <TextField label="Sets" type="number" value={exercise.number}
-                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'number', e.target.value)}
-                                      fullWidth />
+                                    <TextField
+                                      label="Sets"
+                                      type="number"
+                                      value={exercise.number}
+                                      onChange={(e) =>
+                                        updateExercise(
+                                          groupIndex,
+                                          exerciseIndex,
+                                          "number",
+                                          e.target.value
+                                        )
+                                      }
+                                      fullWidth
+                                    />
                                   </Grid>
                                 )}
                                 {!exercises[exercise.exerciseId]?.timed ? (
                                   <Grid item xs={2}>
-                                    <TextField label="Reps" type="number" value={exercise.reps}
-                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'reps', e.target.value)}
-                                      fullWidth />
+                                    <TextField
+                                      label="Reps"
+                                      type="number"
+                                      value={exercise.reps}
+                                      onChange={(e) =>
+                                        updateExercise(
+                                          groupIndex,
+                                          exerciseIndex,
+                                          "reps",
+                                          e.target.value
+                                        )
+                                      }
+                                      fullWidth
+                                    />
                                   </Grid>
                                 ) : (
                                   <Grid item xs={2}>
-                                    <TextField label="Time (s)" type="number" value={exercise.time}
-                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'time', e.target.value)}
-                                      fullWidth />
+                                    <TextField
+                                      label="Time (s)"
+                                      type="number"
+                                      value={exercise.time}
+                                      onChange={(e) =>
+                                        updateExercise(
+                                          groupIndex,
+                                          exerciseIndex,
+                                          "time",
+                                          e.target.value
+                                        )
+                                      }
+                                      fullWidth
+                                    />
                                   </Grid>
                                 )}
                                 {!group.isSuperSet ? (
                                   <Grid item xs={3}>
-                                    <TextField label="Notes" value={exercise.notes}
-                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                                      fullWidth />
+                                    <TextField
+                                      label="Notes"
+                                      value={exercise.notes}
+                                      onChange={(e) =>
+                                        updateExercise(
+                                          groupIndex,
+                                          exerciseIndex,
+                                          "notes",
+                                          e.target.value
+                                        )
+                                      }
+                                      fullWidth
+                                    />
                                   </Grid>
-                                ) :
+                                ) : (
                                   <Grid item xs={4}>
-                                    <TextField label="Notes" value={exercise.notes}
-                                      onChange={(e) => updateExercise(groupIndex, exerciseIndex, 'notes', e.target.value)}
-                                      fullWidth />
-                                  </Grid>}
+                                    <TextField
+                                      label="Notes"
+                                      value={exercise.notes}
+                                      onChange={(e) =>
+                                        updateExercise(
+                                          groupIndex,
+                                          exerciseIndex,
+                                          "notes",
+                                          e.target.value
+                                        )
+                                      }
+                                      fullWidth
+                                    />
+                                  </Grid>
+                                )}
                                 <Grid item xs={1}>
-                                  <IconButton onClick={() => removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)}>
+                                  <IconButton
+                                    onClick={() =>
+                                      removeExercise(
+                                        groupIndex,
+                                        exerciseIndex,
+                                        exercise.exerciseId
+                                      )
+                                    }
+                                  >
                                     <Delete />
                                   </IconButton>
                                 </Grid>
@@ -420,13 +557,20 @@ const CreateWorkoutPlan = () => {
                             ))}
                             {group.isSuperSet && (
                               <Grid item xs={12}>
-                                <Button variant="outlined" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(groupIndex); }}>
+                                <Button
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={() => {
+                                    setIsAddingExercise(true);
+                                    setCurrentGroupIndex(groupIndex);
+                                  }}
+                                >
                                   Add Another Exercise to Super Set
                                 </Button>
                               </Grid>
                             )}
                           </Grid>
-                          <Divider style={{ margin: '20px 0' }} />
+                          <Divider style={{ margin: "20px 0" }} />
                         </React.Fragment>
                       </div>
                     )}
@@ -438,7 +582,14 @@ const CreateWorkoutPlan = () => {
         </DragDropContext>
       </div>
 
-      <Button variant="contained" color="primary" onClick={() => { setIsAddingExercise(true); setCurrentGroupIndex(null); }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => {
+          setIsAddingExercise(true);
+          setCurrentGroupIndex(null);
+        }}
+      >
         Add Exercises
       </Button>
 
@@ -447,11 +598,15 @@ const CreateWorkoutPlan = () => {
           variant="contained"
           color="primary"
           onClick={handleSavePlan}
-          style={{ marginRight: '8px' }}
+          style={{ marginRight: "8px" }}
         >
           Save Workout Plan
         </Button>
-        <Button variant="outlined" color="secondary" onClick={() => navigate('/workout-plans')}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => navigate("/workout-plans")}
+        >
           Cancel
         </Button>
       </Box>

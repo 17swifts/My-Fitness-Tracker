@@ -1,10 +1,17 @@
 // src/components/Notifications.js
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Box, FormControlLabel, Switch, Typography, CircularProgress, IconButton } from '@mui/material';
-import { auth, firestore } from '../firebase';
-import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, { useState, useEffect } from "react";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  Box,
+  FormControlLabel,
+  Switch,
+  Typography,
+  CircularProgress,
+  IconButton,
+} from "@mui/material";
+import { auth, firestore } from "../firebase";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState({
@@ -20,19 +27,19 @@ const Notifications = () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDocRef = doc(firestore, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             setNotifications(userDoc.data().notifications || {});
           } else {
-            setError('Notifications not found');
+            setError("Notifications not found");
           }
         } else {
-          setError('No user logged in');
+          setError("No user logged in");
         }
       } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-        setError('Failed to fetch notifications');
+        console.error("Failed to fetch notifications:", error);
+        setError("Failed to fetch notifications");
       } finally {
         setLoading(false);
       }
@@ -46,11 +53,11 @@ const Notifications = () => {
     const updatedNotifications = { ...notifications, [name]: checked };
 
     try {
-      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      const userDocRef = doc(firestore, "users", auth.currentUser.uid);
       await updateDoc(userDocRef, { notifications: updatedNotifications });
       setNotifications(updatedNotifications);
     } catch (error) {
-      console.error('Failed to update notifications:', error);
+      console.error("Failed to update notifications:", error);
     }
   };
 
@@ -64,12 +71,12 @@ const Notifications = () => {
 
   return (
     <Box p={3}>
-        <IconButton className="back-button"
-            onClick={() => navigate(-1)} 
-        >
+      <IconButton className="back-button" onClick={() => navigate(-1)}>
         <ArrowBackIcon />
       </IconButton>
-      <Typography variant="h5" gutterBottom>Notifications</Typography>
+      <Typography variant="h5" gutterBottom>
+        Notifications
+      </Typography>
       <FormControlLabel
         control={
           <Switch

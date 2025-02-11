@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Typography,
   Box,
@@ -18,15 +18,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import { firestore } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import Equipment from './Equipment';
-import ScheduleWorkout from './ScheduleWorkout';
-import './styles/WorkoutPlanDetail.css';
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import { firestore } from "../firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import Equipment from "./Equipment";
+import ScheduleWorkout from "./ScheduleWorkout";
+import "./styles/WorkoutPlanDetail.css";
 
 const WorkoutPlanDetail = () => {
   const { id } = useParams();
@@ -43,11 +43,14 @@ const WorkoutPlanDetail = () => {
     const fetchWorkoutData = async () => {
       try {
         // Try to fetch from scheduledWorkouts first
-        const scheduledRef = doc(firestore, 'scheduledWorkouts', id);
+        const scheduledRef = doc(firestore, "scheduledWorkouts", id);
         const scheduledSnap = await getDoc(scheduledRef);
 
         if (scheduledSnap.exists()) {
-          const scheduledData = { id: scheduledSnap.id, ...scheduledSnap.data() };
+          const scheduledData = {
+            id: scheduledSnap.id,
+            ...scheduledSnap.data(),
+          };
           setWorkoutPlan(scheduledData);
           setIsScheduledWorkout(true);
           setIsCompleted(scheduledData.isCompleted || false); // Set initial completed state
@@ -57,23 +60,23 @@ const WorkoutPlanDetail = () => {
           fetchWorkoutPlan(id);
         }
       } catch (error) {
-        console.error('Error fetching workout data:', error);
+        console.error("Error fetching workout data:", error);
       }
     };
 
     const fetchWorkoutPlan = async (workoutId) => {
       try {
-        const docRef = doc(firestore, 'workoutPlans', workoutId);
+        const docRef = doc(firestore, "workoutPlans", workoutId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const planData = { id: docSnap.id, ...docSnap.data() };
           setWorkoutPlan(planData);
           fetchExerciseDetails(planData);
         } else {
-          console.log('No such document!');
+          console.log("No such document!");
         }
       } catch (error) {
-        console.error('Error fetching workout plan:', error);
+        console.error("Error fetching workout plan:", error);
       }
     };
 
@@ -86,10 +89,14 @@ const WorkoutPlanDetail = () => {
           });
         });
 
-        const exercisePromises = Array.from(exerciseIds).map(async (exerciseId) => {
-          const exerciseDoc = await getDoc(doc(firestore, 'exercises', exerciseId));
-          return { id: exerciseId, data: exerciseDoc.data() };
-        });
+        const exercisePromises = Array.from(exerciseIds).map(
+          async (exerciseId) => {
+            const exerciseDoc = await getDoc(
+              doc(firestore, "exercises", exerciseId)
+            );
+            return { id: exerciseId, data: exerciseDoc.data() };
+          }
+        );
 
         const exerciseResults = await Promise.all(exercisePromises);
         const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
@@ -99,7 +106,7 @@ const WorkoutPlanDetail = () => {
         setExercises(exerciseData);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching exercises:', error);
+        console.error("Error fetching exercises:", error);
       }
     };
 
@@ -120,12 +127,12 @@ const WorkoutPlanDetail = () => {
 
   const handleMarkAsComplete = async () => {
     try {
-      const scheduledRef = doc(firestore, 'scheduledWorkouts', id);
+      const scheduledRef = doc(firestore, "scheduledWorkouts", id);
       await updateDoc(scheduledRef, { isComplete: !isCompleted });
       setIsCompleted(!isCompleted);
       setOpenDialog(false);
     } catch (error) {
-      console.error('Error marking workout as complete:', error);
+      console.error("Error marking workout as complete:", error);
     }
   };
 
@@ -133,14 +140,16 @@ const WorkoutPlanDetail = () => {
     const avgSetDuration = 2;
     const totalDuration = workoutPlan.setGroups.reduce((total, group) => {
       if (group.isSuperSet)
-        return total + parseInt(group.number) * group.sets.length * avgSetDuration;
+        return (
+          total + parseInt(group.number) * group.sets.length * avgSetDuration
+        );
       else return total + parseInt(group.sets[0].number) * avgSetDuration;
     }, 0);
     return totalDuration;
   };
 
   const getColorForSuperset = (index) => {
-    const colors = ['#ff5733', '#33c3ff', '#33ff57'];
+    const colors = ["#ff5733", "#33c3ff", "#33ff57"];
     return colors[index % colors.length];
   };
 
@@ -154,10 +163,10 @@ const WorkoutPlanDetail = () => {
         className="back-button"
         onClick={() => navigate(-1)}
         sx={{
-          position: 'absolute',
-          top: '85px',
-          left: '320px',
-          zIndex: '1000',
+          position: "absolute",
+          top: "85px",
+          left: "320px",
+          zIndex: "1000",
         }}
       >
         <ArrowBackIcon />
@@ -173,12 +182,20 @@ const WorkoutPlanDetail = () => {
 
       {isScheduledWorkout && (
         <Box display="flex" alignItems="center" mb={2}>
-          <ListItemIcon className={`${isCompleted ? 'completed-icon' : 'incomplete-icon'}`}>
-            {isCompleted ? <CheckCircleIcon color="success"/> : <RadioButtonUncheckedIcon />}
+          <ListItemIcon
+            className={`${isCompleted ? "completed-icon" : "incomplete-icon"}`}
+          >
+            {isCompleted ? (
+              <CheckCircleIcon color="success" />
+            ) : (
+              <RadioButtonUncheckedIcon />
+            )}
           </ListItemIcon>
-          <Typography>{isCompleted ? 'Workout Completed' : 'Incomplete'}</Typography>
-          <Link onClick={handleCheckboxChange} style={{ marginLeft: 'auto' }}>
-            {isCompleted ? 'Unmark As Complete' : 'Mark As Complete'}
+          <Typography>
+            {isCompleted ? "Workout Completed" : "Incomplete"}
+          </Typography>
+          <Link onClick={handleCheckboxChange} style={{ marginLeft: "auto" }}>
+            {isCompleted ? "Unmark As Complete" : "Mark As Complete"}
           </Link>
         </Box>
       )}
@@ -187,7 +204,8 @@ const WorkoutPlanDetail = () => {
         <DialogTitle>Mark Workout as Complete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to {isCompleted ? 'unmark' : 'mark'} this workout as complete?
+            Are you sure you want to {isCompleted ? "unmark" : "mark"} this
+            workout as complete?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -200,21 +218,21 @@ const WorkoutPlanDetail = () => {
 
       <List>
         {workoutPlan.setGroups.map((group, index) => {
-          const color = group.isSuperSet ? getColorForSuperset(index) : '#000';
+          const color = group.isSuperSet ? getColorForSuperset(index) : "#000";
           return (
             <React.Fragment key={index}>
               {group.isSuperSet && (
                 <ListItem>
                   <Box
                     sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      position: 'relative',
+                      display: "flex",
+                      flexDirection: "column",
+                      position: "relative",
                     }}
                   >
                     <Typography
                       variant="subtitle1"
-                      style={{ color, marginLeft: '16px', fontWeight: 'bold' }}
+                      style={{ color, marginLeft: "16px", fontWeight: "bold" }}
                     >
                       Superset of {group.number} sets
                     </Typography>
@@ -223,12 +241,12 @@ const WorkoutPlanDetail = () => {
                       flexItem
                       sx={{
                         backgroundColor: color,
-                        position: 'absolute',
+                        position: "absolute",
                         left: 0,
                         top: 0,
                         bottom: 0,
-                        width: '4px',
-                        marginLeft: '-20px',
+                        width: "4px",
+                        marginLeft: "-20px",
                       }}
                     />
                     {group.sets.map((set, setIndex) => (
@@ -238,17 +256,22 @@ const WorkoutPlanDetail = () => {
                             {exercises[set.exerciseId] && (
                               <Link href={`/exercise/${set.exerciseId}`}>
                                 <img
-                                  src={`../${exercises[set.exerciseId].imageUrl}`}
+                                  src={`../${
+                                    exercises[set.exerciseId].imageUrl
+                                  }`}
                                   alt={exercises[set.exerciseId].name}
-                                  style={{ width: '80%' }}
+                                  style={{ width: "80%" }}
                                 />
                               </Link>
                             )}
                           </Grid>
                           <Grid item xs={10}>
-                            <Typography>{exercises[set.exerciseId]?.name}</Typography>
                             <Typography>
-                              {set.reps} reps{set.notes ? ` - ${set.notes}` : ''}
+                              {exercises[set.exerciseId]?.name}
+                            </Typography>
+                            <Typography>
+                              {set.reps} reps
+                              {set.notes ? ` - ${set.notes}` : ""}
                             </Typography>
                           </Grid>
                         </Grid>
@@ -268,18 +291,22 @@ const WorkoutPlanDetail = () => {
                             {exercises[set.exerciseId] && (
                               <Link href={`/exercise/${set.exerciseId}`}>
                                 <img
-                                  src={`../${exercises[set.exerciseId].imageUrl}`}
+                                  src={`../${
+                                    exercises[set.exerciseId].imageUrl
+                                  }`}
                                   alt={exercises[set.exerciseId].name}
-                                  style={{ width: '80%' }}
+                                  style={{ width: "80%" }}
                                 />
                               </Link>
                             )}
                           </Grid>
                           <Grid item xs={10}>
-                            <Typography>{exercises[set.exerciseId]?.name}</Typography>
+                            <Typography>
+                              {exercises[set.exerciseId]?.name}
+                            </Typography>
                             <Typography>
                               {set.number} sets x {set.reps}
-                              {set.notes ? ` - ${set.notes}` : ''}
+                              {set.notes ? ` - ${set.notes}` : ""}
                             </Typography>
                             <Typography>90s rest between sets</Typography>
                           </Grid>
@@ -296,10 +323,18 @@ const WorkoutPlanDetail = () => {
       </List>
 
       <Box className="sticky-buttons">
-        <Button variant="outlined" color="secondary" onClick={handleLogWorkoutClick}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={handleLogWorkoutClick}
+        >
           Start Now
         </Button>
-        <Button variant="contained" color="primary" onClick={handleScheduleClick}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleScheduleClick}
+        >
           Schedule Workout
         </Button>
       </Box>
@@ -307,19 +342,22 @@ const WorkoutPlanDetail = () => {
       <Modal open={isScheduling} onClose={() => setIsScheduling(false)}>
         <Box
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '30%',
-            height: '30%',
-            bgcolor: 'background.paper',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "30%",
+            height: "30%",
+            bgcolor: "background.paper",
             boxShadow: 24,
-            overflowY: 'auto',
+            overflowY: "auto",
             p: 4,
           }}
         >
-          <ScheduleWorkout workoutId={workoutPlan.id} onClose={() => setIsScheduling(false)} />
+          <ScheduleWorkout
+            workoutId={workoutPlan.id}
+            onClose={() => setIsScheduling(false)}
+          />
         </Box>
       </Modal>
     </Box>

@@ -1,21 +1,29 @@
 // src/components/UpdateProfile.js
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Box, TextField, Button, MenuItem, Typography, CircularProgress, IconButton } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { auth, firestore } from '../firebase';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, { useState, useEffect } from "react";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  Box,
+  TextField,
+  Button,
+  MenuItem,
+  Typography,
+  CircularProgress,
+  IconButton,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { auth, firestore } from "../firebase";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const UpdateProfile = () => {
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    dob: '',
-    height: '',
-    sex: '',
-    activityLevel: '',
-    country: '',
-    city: '',
+    firstName: "",
+    lastName: "",
+    dob: "",
+    height: "",
+    sex: "",
+    activityLevel: "",
+    country: "",
+    city: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,19 +34,19 @@ const UpdateProfile = () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDocRef = doc(firestore, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             setProfileData(userDoc.data());
           } else {
-            setError('Profile not found');
+            setError("Profile not found");
           }
         } else {
-          setError('No user logged in');
+          setError("No user logged in");
         }
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
-        setError('Failed to fetch profile');
+        console.error("Failed to fetch profile:", error);
+        setError("Failed to fetch profile");
       } finally {
         setLoading(false);
       }
@@ -57,11 +65,11 @@ const UpdateProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      const userDocRef = doc(firestore, "users", auth.currentUser.uid);
       await updateDoc(userDocRef, profileData);
-      navigate('/profile'); // Navigate back to profile after update
+      navigate("/profile"); // Navigate back to profile after update
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
     }
   };
 
@@ -75,12 +83,12 @@ const UpdateProfile = () => {
 
   return (
     <Box p={3}>
-      <IconButton className="back-button"
-            onClick={() => navigate(-1)} 
-        >
+      <IconButton className="back-button" onClick={() => navigate(-1)}>
         <ArrowBackIcon />
       </IconButton>
-      <Typography variant="h5" gutterBottom>Update Profile</Typography>
+      <Typography variant="h5" gutterBottom>
+        Update Profile
+      </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
           label="First Name"

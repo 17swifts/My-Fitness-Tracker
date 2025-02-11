@@ -1,7 +1,13 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeSd0Ql-FUixSSMlGH54hFU1oZ_7OYuBo",
@@ -9,7 +15,7 @@ const firebaseConfig = {
   projectId: "fitness-tracker-711d6",
   storageBucket: "fitness-tracker-711d6.appspot.com",
   messagingSenderId: "532206590056",
-  appId: "1:532206590056:web:a8416fd887f6395505c3dd"
+  appId: "1:532206590056:web:a8416fd887f6395505c3dd",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -18,4 +24,12 @@ const firestore = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, firestore, storage, googleProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup };
+export {
+  auth,
+  firestore,
+  storage,
+  googleProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+};
