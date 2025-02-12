@@ -1,8 +1,11 @@
-# Personal Fitness Tracker
+# LiftIQ | Smarter workouts, stronger results.
 
-This repository is a continuous work in progress for personal development and use. 
+Plan, track, and optimize your gym workouts with AI-powered training. Create custom workout plans, log your progress, and sync seamlessly with your devices such as Fitbit, InBody, and MyFitnessPal. Stay on track with smart scheduling, progress insights, and auto-generated workouts tailored to your goals.
 
-Fitness tracker for 
+This repository is a continuous work in progress for personal development and use.
+
+Fitness tracker for
+
 - Creating workout plans
 - Scheduling workouts
 - Tracking stats (reps, weight, time)
@@ -49,16 +52,17 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 - Statistics on dashboard using fitbit
 - Calendar activites from fitbit
 - My fitness pal integration
-- In body itegration 
+- In body itegration
 - ~Update workout detail and log workout to show/ hide weights based on hasWeight~
 - ~Update to support timed exercises~
 - ~Exercise library filter by category~
 - ~Better user experience for exercise library~
 - Cardio exercise support (time, cals, distance)
-- Back arrow styling weird in the middle 
+- Back arrow styling weird in the middle
 - Back arrow from logged to detail back to wherever
-- ~Timer in log workout~ 
+- ~Timer in log workout~
 - ~Search in workout plans~
 - ~Edit workout and save as new option
-- Fix fitbit integration so it doesn't have to connect each time 
-
+- Fix fitbit integration so it doesn't have to connect each time
+- Delete scheduled workouts
+- Themed design

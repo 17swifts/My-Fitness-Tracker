@@ -24,7 +24,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import { firestore } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import Equipment from "./Equipment";
+import Equipment from "./common/Equipment";
 import ScheduleWorkout from "./ScheduleWorkout";
 import "./styles/WorkoutPlanDetail.css";
 

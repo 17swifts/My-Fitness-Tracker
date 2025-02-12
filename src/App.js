@@ -16,26 +16,26 @@ import {
   FitnessCenter,
   BarChart,
   AccountCircle,
-  Notifications,
 } from "@mui/icons-material";
 
 import SignUp from "./components/SignUp";
-import Profile from "./components/Profile";
+import Profile from "./components/profile/Profile";
 import CreateWorkoutPlan from "./components/CreateWorkoutPlan";
-import ExerciseLibrary from "./components/ExerciseLibrary";
+import ExerciseLibrary from "./components/exerciseLibrary/ExerciseLibrary";
 import LogWorkout from "./components/LogWorkout";
-import Statistics from "./components/Statistics";
-import DashboardPage from "./components/DashboardPage";
-import CalendarView from "./components/CalendarView";
-import WorkoutPlans from "./components/WorkoutPlans";
+import Statistics from "./components/statistics/Statistics";
+import DashboardPage from "./components/dashboard/DashboardPage";
+import CalendarView from "./components/calendar/CalendarView";
+import WorkoutPlans from "./components/workoutPlans/WorkoutPlans";
 import WorkoutPlanDetail from "./components/WorkoutPlanDetail";
-import ExerciseDetail from "./components/ExerciseDetail";
+import ExerciseDetail from "./components/exerciseLibrary/ExerciseDetail";
 import { auth } from "./firebase";
-import Units from "./components/Units";
-import UpdateProfile from "./components/UpdateProfile";
-import FitbitConnect from "./components/FitbitConnect";
+import Units from "./components/profile/Units";
+import UpdateProfile from "./components/profile/UpdateProfile";
+import FitbitConnect from "./components/profile/FitbitConnect";
 import GenerateWorkoutPlan from "./components/GenerateWorkoutPlan";
 import LogExercise from "./components/LogExercise";
+import Notifications from "./components/profile/Notifications";
 
 const App = () => {
   const [value, setValue] = React.useState(0);
@@ -87,7 +87,7 @@ const App = () => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            Fitness Tracker
+            LiftIQ
           </Typography>
           {!user && (
             <Button color="inherit" onClick={() => navigate("/signup")}>

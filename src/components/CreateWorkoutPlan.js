@@ -15,7 +15,7 @@ import {
   Switch,
 } from "@mui/material";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import ExerciseLibrary from "./ExerciseLibrary";
+import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
 import { Delete } from "@mui/icons-material";
 import dayjs from "dayjs";
 import "./styles/CreateWorkoutPlan.css";

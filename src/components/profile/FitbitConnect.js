@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button, Typography, Box, Alert } from "@mui/material";
-import { auth, firestore } from "../firebase";
+import { auth, firestore } from "../../firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import axios from "axios";
 import dayjs from "dayjs";
-import { useFitbit } from "../context/FitbitContext.js";
+import { useFitbit } from "../../context/FitbitContext.js";
 
 const FitbitConnect = () => {
   const { fitbitToken, setFitbitToken } = useFitbit();

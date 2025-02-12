@@ -7,7 +7,7 @@ import {
   ListItemText,
   ListItemIcon,
 } from "@mui/material";
-import { auth, firestore } from "../firebase";
+import { auth, firestore } from "../../firebase.js";
 import {
   collection,
   query,
@@ -27,8 +27,8 @@ import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import dayjs from "dayjs";
 import axios from "axios";
-import "./styles/CalendarView.css";
-import { useFitbit } from "../context/FitbitContext.js";
+import "../styles/CalendarView.css";
+import { useFitbit } from "../../context/FitbitContext.js";
 
 const CalendarView = () => {
   const { fitbitToken } = useFitbit();

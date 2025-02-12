@@ -1,63 +1,60 @@
-// src/components/Notifications.js
+// src/components/Units.js
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import {
   Box,
+  RadioGroup,
   FormControlLabel,
-  Switch,
+  Radio,
   Typography,
   CircularProgress,
   IconButton,
 } from "@mui/material";
-import { auth, firestore } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { auth, firestore } from "../../firebase";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const Notifications = () => {
-  const [notifications, setNotifications] = useState({
-    email: false,
-    push: false,
-  });
+const Units = () => {
+  const [units, setUnits] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchUnits = async () => {
       try {
         const user = auth.currentUser;
         if (user) {
           const userDocRef = doc(firestore, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            setNotifications(userDoc.data().notifications || {});
+            setUnits(userDoc.data().units || "metric");
           } else {
-            setError("Notifications not found");
+            setError("Units not found");
           }
         } else {
           setError("No user logged in");
         }
       } catch (error) {
-        console.error("Failed to fetch notifications:", error);
-        setError("Failed to fetch notifications");
+        console.error("Failed to fetch units:", error);
+        setError("Failed to fetch units");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchNotifications();
+    fetchUnits();
   }, []);
 
-  const handleToggle = async (e) => {
-    const { name, checked } = e.target;
-    const updatedNotifications = { ...notifications, [name]: checked };
+  const handleChange = async (e) => {
+    const selectedUnits = e.target.value;
 
     try {
       const userDocRef = doc(firestore, "users", auth.currentUser.uid);
-      await updateDoc(userDocRef, { notifications: updatedNotifications });
-      setNotifications(updatedNotifications);
+      await updateDoc(userDocRef, { units: selectedUnits });
+      setUnits(selectedUnits);
     } catch (error) {
-      console.error("Failed to update notifications:", error);
+      console.error("Failed to update units:", error);
     }
   };
 
@@ -75,30 +72,22 @@ const Notifications = () => {
         <ArrowBackIcon />
       </IconButton>
       <Typography variant="h5" gutterBottom>
-        Notifications
+        Units of Measurement
       </Typography>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={notifications.email}
-            onChange={handleToggle}
-            name="email"
-          />
-        }
-        label="Email Notifications"
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={notifications.push}
-            onChange={handleToggle}
-            name="push"
-          />
-        }
-        label="Push Notifications"
-      />
+      <RadioGroup value={units} onChange={handleChange}>
+        <FormControlLabel
+          value="metric"
+          control={<Radio />}
+          label="Metric (kg, cm)"
+        />
+        <FormControlLabel
+          value="imperial"
+          control={<Radio />}
+          label="Imperial (lbs, inches)"
+        />
+      </RadioGroup>
     </Box>
   );
 };
 
-export default Notifications;
+export default Units;

@@ -20,7 +20,7 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import { auth, firestore } from "../firebase";
 import dayjs from "dayjs";
 import "./styles/CreateWorkoutPlan.css";
-import ExerciseLibrary from "./ExerciseLibrary";
+import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
 
 const GenerateWorkoutPlan = () => {
   const navigate = useNavigate();

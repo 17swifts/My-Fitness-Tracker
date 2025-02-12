@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -11,6 +11,7 @@ import {
   Grid,
   Link,
   Modal,
+  CircularProgress,
 } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
 import { firestore, auth } from "../firebase";
@@ -26,241 +27,287 @@ import {
 } from "firebase/firestore";
 import dayjs from "dayjs";
 import TimerIcon from "@mui/icons-material/Timer";
-import ExerciseLibrary from "./ExerciseLibrary";
-import Timer from "./Timer";
+import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
+import Timer from "./common/Timer";
+
+const workoutReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_WORKOUT_PLAN":
+      return { ...state, workoutPlan: action.payload, loading: false };
+    case "SET_EXERCISES":
+      return { ...state, exercises: action.payload };
+    case "SET_HISTORY":
+      return { ...state, exerciseHistory: action.payload };
+    case "SET_COMPLETED_WORKOUT":
+      return { ...state, completedWorkout: action.payload };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_MODAL":
+      return { ...state, modalOpen: action.payload };
+    case "SET_TIMER":
+      return { ...state, showTimer: action.payload };
+    case "SET_TIME_SPENT":
+      return { ...state, timeSpent: action.payload };
+    default:
+      return state;
+  }
+};
 
 const LogWorkout = () => {
   const { id } = useParams();
-  const [workoutPlan, setWorkoutPlan] = useState(null);
-  const [exercises, setExercises] = useState({});
-  const [completedWorkout, setCompletedWorkout] = useState({});
-  const [exerciseHistory, setExerciseHistory] = useState({});
-  const [timeSpentOnPage, setTimeSpentOnPage] = useState(0); // in milliseconds
+  const navigate = useNavigate();
+
+  const [state, dispatch] = useReducer(workoutReducer, {
+    workoutPlan: null,
+    exercises: {},
+    exerciseHistory: {},
+    completedWorkout: {},
+    loading: true,
+    modalOpen: false,
+    showTimer: false,
+    timeSpent: 0,
+    currentGroupIndex: null,
+    currentExerciseIndex: null,
+  });
+
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
   const [showTimer, setShowTimer] = useState(false);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchWorkoutPlan = async () => {
+  const fetchExerciseHistory = useCallback(
+    async (exerciseIds) => {
       try {
-        const docRef = doc(firestore, "workoutPlans", id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const planData = { id: docSnap.id, ...docSnap.data() };
-          setWorkoutPlan(planData);
-          await fetchExerciseDetails(planData);
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching workout plan:", error);
-      }
-    };
+        const user = auth.currentUser;
+        if (!user) return;
 
-    fetchWorkoutPlan();
-  }, [id]);
-
-  const fetchExerciseDetails = async (planData) => {
-    try {
-      const exerciseIds = new Set();
-      planData.setGroups.forEach((group) => {
-        group.sets.forEach((set) => {
-          exerciseIds.add(set.exerciseId);
-        });
-      });
-
-      const exercisePromises = Array.from(exerciseIds).map(
-        async (exerciseId) => {
-          const exerciseDoc = await getDoc(
-            doc(firestore, "exercises", exerciseId)
-          );
-          return { id: exerciseId, data: exerciseDoc.data() };
-        }
-      );
-
-      const exerciseResults = await Promise.all(exercisePromises);
-      const exerciseData = exerciseResults.reduce((acc, { id, data }) => {
-        acc[id] = data;
-        return acc;
-      }, {});
-      setExercises(exerciseData);
-
-      await fetchExerciseHistory(exerciseIds);
-    } catch (error) {
-      console.error("Error fetching exercises:", error);
-    }
-  };
-
-  const fetchExerciseHistory = async (exerciseIds) => {
-    try {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const historyPromises = Array.from(exerciseIds).map(
-        async (exerciseId) => {
+        const historyPromises = [...exerciseIds].map(async (exerciseId) => {
           const historyQuery = query(
             collection(firestore, "exerciseStats"),
             where("exerciseId", "==", exerciseId),
             where("userId", "==", user.uid)
           );
           const historySnapshot = await getDocs(historyQuery);
-          const historyData = historySnapshot.docs.map((doc) => doc.data());
+          return {
+            id: exerciseId,
+            data: historySnapshot.docs.map((doc) => doc.data()),
+          };
+        });
 
-          return { id: exerciseId, data: historyData };
-        }
-      );
+        const historyResults = await Promise.all(historyPromises);
+        const historyData = Object.fromEntries(
+          historyResults.map(({ id, data }) => [id, data])
+        );
 
-      const historyResults = await Promise.all(historyPromises);
-      const historyData = historyResults.reduce((acc, { id, data }) => {
-        acc[id] = data;
-        return acc;
-      }, {});
+        dispatch({ type: "SET_HISTORY", payload: historyData });
+      } catch (error) {
+        console.error("Error fetching exercise history:", error);
+      }
+    },
+    [dispatch]
+  );
 
-      setExerciseHistory(historyData);
-    } catch (error) {
-      console.error("Error fetching exercise history:", error);
-    }
-  };
+  const fetchExerciseDetails = useCallback(
+    async (planData) => {
+      try {
+        const exerciseIds = new Set(
+          planData.setGroups.flatMap((group) =>
+            group.sets.map((set) => set.exerciseId)
+          )
+        );
+
+        const exercisePromises = [...exerciseIds].map(async (exerciseId) => {
+          const exerciseDoc = await getDoc(
+            doc(firestore, "exercises", exerciseId)
+          );
+          return { id: exerciseId, data: exerciseDoc.data() };
+        });
+
+        const exerciseResults = await Promise.all(exercisePromises);
+        const exerciseData = Object.fromEntries(
+          exerciseResults.map(({ id, data }) => [id, data])
+        );
+
+        dispatch({ type: "SET_EXERCISES", payload: exerciseData });
+        fetchExerciseHistory(exerciseIds);
+      } catch (error) {
+        console.error("Error fetching exercises:", error);
+      }
+    },
+    [dispatch, fetchExerciseHistory]
+  );
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTimeSpentOnPage((prevTime) => prevTime + 1000); // increment by 1 second
-    }, 1000); // every 1 second
-    return () => clearInterval(intervalId); // cleanup
-  }, []); // run only once on mount
+    const fetchWorkoutPlan = async () => {
+      try {
+        const docRef = doc(firestore, "workoutPlans", id);
+        const docSnap = await getDoc(docRef);
 
+        if (docSnap.exists()) {
+          const planData = { id: docSnap.id, ...docSnap.data() };
+          dispatch({ type: "SET_WORKOUT_PLAN", payload: planData });
+          fetchExerciseDetails(planData);
+        }
+      } catch (error) {
+        console.error("Error fetching workout plan:", error);
+      }
+    };
+
+    const fetchExerciseDetails = async (planData) => {
+      try {
+        const exerciseIds = new Set(
+          planData.setGroups.flatMap((group) =>
+            group.sets.map((set) => set.exerciseId)
+          )
+        );
+
+        const exercisePromises = [...exerciseIds].map(async (exerciseId) => {
+          const exerciseDoc = await getDoc(
+            doc(firestore, "exercises", exerciseId)
+          );
+          return { id: exerciseId, data: exerciseDoc.data() };
+        });
+
+        const exerciseResults = await Promise.all(exercisePromises);
+        const exerciseData = Object.fromEntries(
+          exerciseResults.map(({ id, data }) => [id, data])
+        );
+
+        dispatch({ type: "SET_EXERCISES", payload: exerciseData });
+        fetchExerciseHistory(exerciseIds);
+      } catch (error) {
+        console.error("Error fetching exercises:", error);
+      }
+    };
+
+    fetchWorkoutPlan();
+
+    // Time tracking
+    const intervalId = setInterval(() => {
+      dispatch({ type: "SET_TIME_SPENT", payload: state.timeSpent + 1 });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchExerciseHistory, id, state.timeSpent]);
+
+  // Handle Input Changes
   const handleInputChange = (exerciseId, setNumber, field, value) => {
-    setCompletedWorkout((prevState) => ({
-      ...prevState,
-      [exerciseId]: {
-        ...prevState[exerciseId],
-        [setNumber]: {
-          ...prevState[exerciseId]?.[setNumber],
-          [field]: value,
+    dispatch({
+      type: "SET_COMPLETED_WORKOUT",
+      payload: {
+        ...state.completedWorkout,
+        [exerciseId]: {
+          ...state.completedWorkout[exerciseId],
+          [setNumber]: {
+            ...state.completedWorkout[exerciseId]?.[setNumber],
+            [field]: value,
+          },
         },
       },
-    }));
+    });
   };
 
   const handleSaveWorkout = async () => {
     try {
       const user = auth.currentUser;
-      const workoutDate = dayjs().format("YYYY-MM-DD");
-      const workoutDuration = timeSpentOnPage; // Replace with actual calculation
+      if (!user) return;
 
-      if (user) {
-        // Save to loggedWorkouts
-        await addDoc(collection(firestore, "loggedWorkouts"), {
+      const workoutDate = dayjs().format("YYYY-MM-DD");
+      const workoutDuration = state.timeSpent;
+
+      // Batch Firestore updates
+      const batch = [];
+
+      // Save logged workout
+      batch.push(
+        addDoc(collection(firestore, "loggedWorkouts"), {
           workoutId: id,
           date: workoutDate,
           duration: workoutDuration,
           userId: user.uid,
-        });
+        })
+      );
 
-        // Update scheduledWorkouts
-        const scheduledWorkoutsQuery = query(
-          collection(firestore, "scheduledWorkouts"),
-          where("userId", "==", user.uid),
-          where("workoutId", "==", id),
-          where("date", "==", workoutDate)
-        );
-        const scheduledWorkoutSnapshot = await getDocs(scheduledWorkoutsQuery);
-        scheduledWorkoutSnapshot.forEach(async (doc) => {
-          await updateDoc(doc.ref, { isComplete: true });
-        });
+      // Update scheduled workout if it exists
+      const scheduledWorkoutsQuery = query(
+        collection(firestore, "scheduledWorkouts"),
+        where("userId", "==", user.uid),
+        where("workoutId", "==", id),
+        where("date", "==", workoutDate)
+      );
+      const scheduledWorkoutSnapshot = await getDocs(scheduledWorkoutsQuery);
 
-        // Save exercise stats
-        workoutPlan.setGroups.forEach((group) => {
-          group.sets.forEach(async (set) => {
+      scheduledWorkoutSnapshot.forEach((doc) =>
+        batch.push(updateDoc(doc.ref, { isComplete: true }))
+      );
+
+      // Save exercise stats (Handles both Supersets & Regular Sets)
+      const exerciseStatsPromises = state.workoutPlan.setGroups.flatMap(
+        (group) =>
+          group.sets.flatMap((set) => {
             const exerciseId = set.exerciseId;
-            if (group.isSuperSet) {
-              Array.from(Array(parseInt(group.number)).keys()).forEach(
-                async (i) => {
-                  const stats = completedWorkout[exerciseId]?.[i + 1];
-                  if (stats) {
-                    await addDoc(collection(firestore, "exerciseStats"), {
-                      exerciseId,
-                      setNumber: i + 1,
-                      reps: stats.reps ? stats.reps : 0,
-                      weight: stats.weight ? stats.weight : 0,
-                      time: stats.time ? stats.time : 0,
-                      volume: stats.time
-                        ? parseInt(stats.time) * parseInt(group.number)
-                        : parseInt(stats.reps) *
-                          parseInt(stats.weight) *
-                          parseInt(group.number),
-                      metric: stats.time
-                        ? parseInt(stats.time)
-                        : parseInt(stats.reps) * parseInt(stats.weight),
-                      date: workoutDate,
-                      userId: user.uid,
-                    });
-                  }
-                }
-              );
-            } else {
-              Array.from(Array(parseInt(group.sets[0].number)).keys()).forEach(
-                async (i) => {
-                  const stats = completedWorkout[exerciseId]?.[i + 1];
-                  console.log(stats);
-                  if (stats) {
-                    await addDoc(collection(firestore, "exerciseStats"), {
-                      exerciseId,
-                      setNumber: i + 1,
-                      reps: stats.reps ? stats.reps : 0,
-                      weight: stats.weight ? stats.weight : 0,
-                      time: stats.time ? stats.time : 0,
-                      volume: stats.time
-                        ? parseInt(stats.time) * parseInt(group.number)
-                        : parseInt(stats.reps) *
-                          parseInt(stats.weight) *
-                          parseInt(group.sets[0].number),
-                      metric: stats.time
-                        ? parseInt(stats.time)
-                        : parseInt(stats.reps) * parseInt(stats.weight),
-                      date: workoutDate,
-                      userId: user.uid,
-                    });
-                  }
-                }
-              );
-            }
-          });
-        });
+            const numSets = group.isSuperSet
+              ? group.number
+              : group.sets[0].number;
 
-        // Navigate back to the workout detail page
-        navigate(`/workout-plans/${id}`);
-      }
+            return Array.from({ length: numSets }, (_, i) => {
+              const stats = state.completedWorkout[exerciseId]?.[i + 1];
+              if (!stats) return null;
+
+              return addDoc(collection(firestore, "exerciseStats"), {
+                exerciseId,
+                setNumber: i + 1,
+                reps: stats.reps || 0,
+                weight: stats.weight || 0,
+                time: stats.time || 0,
+                volume: stats.time
+                  ? stats.time * numSets
+                  : stats.reps * stats.weight * numSets,
+                metric: stats.time ? stats.time : stats.reps * stats.weight,
+                date: workoutDate,
+                userId: user.uid,
+              });
+            }).filter(Boolean);
+          })
+      );
+
+      // Execute Firestore operations in parallel
+      await Promise.all([...batch, ...exerciseStatsPromises]);
+
+      // Navigate back to the workout detail page
+      navigate(`/workout-plans/${id}`);
     } catch (error) {
       console.error("Error saving workout:", error);
     }
   };
 
   const swapExerciseFromLibrary = async (exercise) => {
-    const updatedSetGroups = [...workoutPlan.setGroups];
-    console.log(
-      parseInt(currentGroupIndex) + " " + parseInt(currentExerciseIndex)
-    );
-    console.log(
-      updatedSetGroups[parseInt(currentGroupIndex)].sets[
-        parseInt(currentExerciseIndex)
-      ]
-    );
-    updatedSetGroups[parseInt(currentGroupIndex)].sets[
-      parseInt(currentExerciseIndex)
-    ].exerciseId = exercise.id;
-    workoutPlan.setGroups = updatedSetGroups;
-    await fetchExerciseDetails(workoutPlan);
-    setIsAddingExercise(false);
+    if (currentGroupIndex === null || currentExerciseIndex === null) return;
+
+    dispatch({
+      type: "SET_WORKOUT_PLAN",
+      payload: {
+        ...state.workoutPlan,
+        setGroups: state.workoutPlan.setGroups.map((group, groupIndex) =>
+          groupIndex === currentGroupIndex
+            ? {
+                ...group,
+                sets: group.sets.map((set, setIndex) =>
+                  setIndex === currentExerciseIndex
+                    ? { ...set, exerciseId: exercise.id }
+                    : set
+                ),
+              }
+            : group
+        ),
+      },
+    });
+
+    await fetchExerciseDetails(state.workoutPlan);
+
+    dispatch({ type: "SET_MODAL", payload: false });
     setCurrentGroupIndex(null);
     setCurrentExerciseIndex(null);
-    console.log(
-      updatedSetGroups[parseInt(currentGroupIndex)].sets[
-        parseInt(currentExerciseIndex)
-      ]
-    );
   };
 
   const handleCancel = () => {
@@ -268,7 +315,7 @@ const LogWorkout = () => {
   };
 
   const renderHistoricalData = (exerciseId, reps, setNo) => {
-    const history = exerciseHistory[exerciseId];
+    const history = state.exerciseHistory[exerciseId];
     if (!history || history.length === 0) return null;
 
     const lastMatch = history.find(
@@ -286,7 +333,7 @@ const LogWorkout = () => {
   };
 
   const getColorForSuperset = (index) => {
-    const colors = ["#ff5733", "#33c3ff", "#33ff57"]; // Example colors, you can expand this
+    const colors = ["#ff5733", "#33c3ff", "#33ff57"];
     return colors[index % colors.length];
   };
 
@@ -298,9 +345,20 @@ const LogWorkout = () => {
     setShowTimer(false);
   };
 
-  if (!workoutPlan) {
-    return <Typography>Loading...</Typography>;
-  }
+  const renderTextField = (exerciseId, index, value, label, type) => {
+    return (
+      <TextField
+        label={label}
+        type="number"
+        value={value || ""}
+        onChange={(e) =>
+          handleInputChange(exerciseId, index, type, e.target.value)
+        }
+      />
+    );
+  };
+
+  if (state.loading) return <CircularProgress />;
 
   return (
     <Box p={3}>
@@ -354,20 +412,20 @@ const LogWorkout = () => {
       </Modal>
 
       <Typography variant="h4" gutterBottom>
-        {workoutPlan.name}
+        {state.workoutPlan.name}
       </Typography>
 
-      {workoutPlan.instructions && (
+      {state.workoutPlan.instructions && (
         <Box mb={2}>
           <Typography variant="h6">Instructions:</Typography>
           <Typography
-            dangerouslySetInnerHTML={{ __html: workoutPlan.instructions }}
+            dangerouslySetInnerHTML={{ __html: state.workoutPlan.instructions }}
           ></Typography>
         </Box>
       )}
 
       <List>
-        {workoutPlan.setGroups.map((group, index) => {
+        {state.workoutPlan.setGroups.map((group, index) => {
           const color = group.isSuperSet ? getColorForSuperset(index) : "#000";
           return (
             <React.Fragment key={index}>
@@ -404,9 +462,9 @@ const LogWorkout = () => {
                       {group.sets.map((set) => (
                         <Box key={`${set.exerciseId}-${i}`} mb={2}>
                           <Typography>
-                            {exercises[set.exerciseId]?.name}
+                            {state.exercises[set.exerciseId]?.name}
                           </Typography>
-                          {!exercises[set.exerciseId]?.timed ? (
+                          {!state.exercises[set.exerciseId]?.timed ? (
                             <Typography>
                               {set.reps} reps{" "}
                               {set.notes ? ` - ${set.notes}` : ""}
@@ -427,71 +485,49 @@ const LogWorkout = () => {
                               <Link href={`/exercise/${set.exerciseId}`}>
                                 <img
                                   src={`../${
-                                    exercises[set.exerciseId]?.imageUrl
+                                    state.exercises[set.exerciseId]?.imageUrl
                                   }`}
-                                  alt={exercises[set.exerciseId]?.name}
+                                  alt={state.exercises[set.exerciseId]?.name}
                                   style={{ width: "100%" }}
                                 />
                               </Link>
                             </Grid>
-                            {!exercises[set.exerciseId]?.timed ? (
+                            {!state.exercises[set.exerciseId]?.timed ? (
                               <Grid item xs={2}>
-                                <TextField
-                                  label="Reps"
-                                  type="number"
-                                  value={
-                                    completedWorkout[set.exerciseId]?.[i + 1]
-                                      ?.reps || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleInputChange(
-                                      set.exerciseId,
-                                      i + 1,
-                                      "reps",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                {renderTextField(
+                                  set.exerciseId,
+                                  i + 1,
+                                  state.completedWorkout[set.exerciseId]?.[
+                                    i + 1
+                                  ]?.reps,
+                                  "Reps",
+                                  "reps"
+                                )}
                               </Grid>
                             ) : (
                               <Grid item xs={2}>
-                                <TextField
-                                  label="Time (s)"
-                                  type="number"
-                                  value={
-                                    completedWorkout[set.exerciseId]?.[i + 1]
-                                      ?.time || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleInputChange(
-                                      set.exerciseId,
-                                      i + 1,
-                                      "time",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                {renderTextField(
+                                  set.exerciseId,
+                                  i + 1,
+                                  state.completedWorkout[set.exerciseId]?.[
+                                    i + 1
+                                  ]?.time,
+                                  "Time (s)",
+                                  "time"
+                                )}
                               </Grid>
                             )}
                             <Grid item xs={2}>
-                              {exercises[set.exerciseId]?.hasWeight && (
-                                <TextField
-                                  label="Weight (kg)"
-                                  type="number"
-                                  value={
-                                    completedWorkout[set.exerciseId]?.[i + 1]
-                                      ?.weight || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleInputChange(
-                                      set.exerciseId,
-                                      i + 1,
-                                      "weight",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                              )}
+                              {state.exercises[set.exerciseId]?.hasWeight &&
+                                renderTextField(
+                                  set.exerciseId,
+                                  i + 1,
+                                  state.completedWorkout[set.exerciseId]?.[
+                                    i + 1
+                                  ]?.weight,
+                                  "Weight (kg)",
+                                  "weight"
+                                )}
                             </Grid>
                             <Grid item xs={5}></Grid>
                             <Grid item xs={1}>
@@ -551,18 +587,18 @@ const LogWorkout = () => {
                       <Link href={`/exercise/${group.sets[0].exerciseId}`}>
                         <img
                           src={`../${
-                            exercises[group.sets[0].exerciseId]?.imageUrl
+                            state.exercises[group.sets[0].exerciseId]?.imageUrl
                           }`}
-                          alt={exercises[group.sets[0].exerciseId]?.name}
+                          alt={state.exercises[group.sets[0].exerciseId]?.name}
                           style={{ width: "100%" }}
                         />
                       </Link>
                     </Grid>
                     <Grid item xs={9}>
                       <Typography variant="h7" gutterBottom>
-                        {exercises[group.sets[0].exerciseId]?.name}
+                        {state.exercises[group.sets[0].exerciseId]?.name}
                       </Typography>
-                      {!exercises[group.sets[0].exerciseId]?.timed ? (
+                      {!state.exercises[group.sets[0].exerciseId]?.timed ? (
                         <Typography variant="subtitle1">
                           {group.sets[0].number} sets x {group.sets[0].reps}
                           {group.sets[0].notes
@@ -594,64 +630,38 @@ const LogWorkout = () => {
                             }`}</Typography>
                           </Grid>
                           <Grid item xs={2}>
-                            {!exercises[group.sets[0].exerciseId]?.timed ? (
-                              <TextField
-                                label="Reps"
-                                type="number"
-                                value={
-                                  completedWorkout[group.sets[0].exerciseId]?.[
-                                    i + 1
-                                  ]?.reps || ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    group.sets[0].exerciseId,
-                                    i + 1,
-                                    "reps",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            ) : (
-                              <TextField
-                                label="Time (s)"
-                                type="number"
-                                value={
-                                  completedWorkout[group.sets[0].exerciseId]?.[
-                                    i + 1
-                                  ]?.time || ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    group.sets[0].exerciseId,
-                                    i + 1,
-                                    "time",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            )}
+                            {!state.exercises[group.sets[0].exerciseId]?.timed
+                              ? renderTextField(
+                                  group.sets[0].exerciseId,
+                                  i + 1,
+                                  state.completedWorkout[
+                                    group.sets[0].exerciseId
+                                  ]?.[i + 1]?.reps,
+                                  "Reps",
+                                  "reps"
+                                )
+                              : renderTextField(
+                                  group.sets[0].exerciseId,
+                                  i + 1,
+                                  state.completedWorkout[
+                                    group.sets[0].exerciseId
+                                  ]?.[i + 1]?.time,
+                                  "Time (s)",
+                                  "time"
+                                )}
                           </Grid>
                           <Grid item xs={2}>
-                            {exercises[group.sets[0].exerciseId]?.hasWeight && (
-                              <TextField
-                                label="Weight (kg)"
-                                type="number"
-                                value={
-                                  completedWorkout[group.sets[0].exerciseId]?.[
-                                    i + 1
-                                  ]?.weight || ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    group.sets[0].exerciseId,
-                                    i + 1,
-                                    "weight",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            )}
+                            {state.exercises[group.sets[0].exerciseId]
+                              ?.hasWeight &&
+                              renderTextField(
+                                group.sets[0].exerciseId,
+                                i + 1,
+                                state.completedWorkout[
+                                  group.sets[0].exerciseId
+                                ]?.[i + 1]?.weight,
+                                "Weight (kg)",
+                                "weight"
+                              )}
                           </Grid>
                           <Grid item xs={5}></Grid>
                           <Grid item xs={1}>

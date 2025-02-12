@@ -1,101 +1,157 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useReducer } from "react";
 import { auth, firestore } from "../firebase";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
-import { Button, TextField, Box, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Alert,
+  Button,
+  TextField,
+} from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 
-const ScheduleWorkout = ({ workoutId }) => {
-  const [workoutDate, setWorkoutDate] = useState(null);
-  const [error, setError] = useState("");
-  const [scheduledDates, setScheduledDates] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
+// Reducer for managing state
+const scheduleReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_SCHEDULED_DATES":
+      return { ...state, scheduledDates: action.payload, loading: false };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload };
+    case "SET_SUCCESS":
+      return { ...state, successMessage: action.payload };
+    case "SET_WORKOUT_DATE":
+      return { ...state, workoutDate: action.payload };
+    default:
+      return state;
+  }
+};
 
+const ScheduleWorkout = ({ workoutId }) => {
+  // Manage state using useReducer
+  const [state, dispatch] = useReducer(scheduleReducer, {
+    workoutDate: null,
+    scheduledDates: [],
+    loading: true,
+    error: "",
+    successMessage: "",
+  });
+
+  // Fetch Scheduled Workouts
   useEffect(() => {
     const fetchScheduledWorkouts = async () => {
       try {
         const user = auth.currentUser;
-        if (user) {
-          const q = query(
-            collection(firestore, "scheduledWorkouts"),
-            where("userId", "==", user.uid)
-          );
-          const querySnapshot = await getDocs(q);
-          const dates = querySnapshot.docs.map((doc) => doc.data().workoutDate);
-          setScheduledDates(dates);
+        if (!user) {
+          dispatch({ type: "SET_ERROR", payload: "User not logged in" });
+          return;
         }
+
+        const q = query(
+          collection(firestore, "scheduledWorkouts"),
+          where("userId", "==", user.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        const dates = querySnapshot.docs.map((doc) => doc.data().date);
+
+        dispatch({ type: "SET_SCHEDULED_DATES", payload: dates });
       } catch (error) {
         console.error("Error fetching scheduled workouts:", error);
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Failed to load scheduled workouts",
+        });
       }
     };
 
     fetchScheduledWorkouts();
   }, []);
 
+  // Handle Workout Scheduling
   const handleScheduleWorkout = async () => {
-    if (!workoutDate) {
-      setError("Please select a workout date.");
+    if (!state.workoutDate) {
+      dispatch({ type: "SET_ERROR", payload: "Please select a workout date." });
       return;
     }
 
-    const formattedDate = dayjs(workoutDate).format("YYYY-MM-DD");
-    if (scheduledDates.includes(formattedDate)) {
-      setError("You have already scheduled a workout for this date.");
+    const formattedDate = dayjs(state.workoutDate).format("YYYY-MM-DD");
+    if (state.scheduledDates.includes(formattedDate)) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: "You have already scheduled a workout for this date.",
+      });
       return;
     }
 
     try {
       const user = auth.currentUser;
-      if (user) {
-        await addDoc(collection(firestore, "scheduledWorkouts"), {
-          date: formattedDate,
-          workoutId,
-          isComplete: false,
-          userId: user.uid,
-        });
-        setWorkoutDate(null);
-        setError("");
-        setSuccessMessage(
-          `Successfully scheduled workout for ${formattedDate}`
-        );
-      }
+      if (!user) return;
+
+      await addDoc(collection(firestore, "scheduledWorkouts"), {
+        date: formattedDate,
+        workoutId,
+        isComplete: false,
+        userId: user.uid,
+      });
+
+      dispatch({ type: "SET_WORKOUT_DATE", payload: null });
+      dispatch({
+        type: "SET_SUCCESS",
+        payload: `Successfully scheduled workout for ${formattedDate}`,
+      });
+
+      // Auto-clear success message after 3 seconds
+      setTimeout(() => dispatch({ type: "SET_SUCCESS", payload: "" }), 3000);
     } catch (error) {
       console.error("Error scheduling workout:", error);
-      setError("Failed to schedule workout. Please try again.");
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Failed to schedule workout. Please try again.",
+      });
     }
   };
 
+  if (state.loading) return <CircularProgress />;
+  if (state.error) return <Typography color="error">{state.error}</Typography>;
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box p={3}>
-        <Typography variant="h6" gutterBottom>
-          Schedule Workout
-        </Typography>
+    <Box p={3}>
+      <Typography variant="h6" gutterBottom>
+        Schedule Workout
+      </Typography>
+
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DatePicker
           label="Workout Date"
-          value={workoutDate}
-          onChange={(date) => setWorkoutDate(date ? date : null)}
+          value={state.workoutDate}
+          onChange={(date) =>
+            dispatch({ type: "SET_WORKOUT_DATE", payload: date })
+          }
           renderInput={(params) => (
             <TextField {...params} fullWidth margin="normal" />
           )}
         />
-        {error && <Typography color="error">{error}</Typography>}
         <Button
           variant="contained"
           color="primary"
           onClick={handleScheduleWorkout}
+          sx={{ marginTop: 2 }}
         >
           Schedule Workout
         </Button>
-        {successMessage && (
-          <Alert severity="success" sx={{ marginTop: 2 }}>
-            {successMessage}
-          </Alert>
-        )}
-      </Box>
-    </LocalizationProvider>
+      </LocalizationProvider>
+
+      {state.successMessage && (
+        <Alert severity="success" sx={{ marginTop: 2 }}>
+          {state.successMessage}
+        </Alert>
+      )}
+    </Box>
   );
 };
 
