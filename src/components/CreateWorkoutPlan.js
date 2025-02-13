@@ -347,6 +347,141 @@ const CreateWorkoutPlan = () => {
     );
   };
 
+  const ExerciseItem = ({
+    group,
+    exercise,
+    groupIndex,
+    exerciseIndex,
+    isSuperset,
+  }) => (
+    <React.Fragment key={exerciseIndex}>
+      <Grid item xs={2}>
+        {state.exercises[exercise.exerciseId] && (
+          <img
+            src={`../${state.exercises[exercise.exerciseId].imageUrl}`}
+            alt={state.exercises[exercise.exerciseId].name}
+            style={{ width: "80%" }}
+          />
+        )}
+      </Grid>
+      <Grid item xs={isSuperset ? 3 : 2}>
+        <Typography>{state.exercises[exercise.exerciseId]?.name}</Typography>
+      </Grid>
+      {!isSuperset && (
+        <Grid item xs={2}>
+          {renderTextField(groupIndex, group.number, "Sets", "number")}
+        </Grid>
+      )}
+      {!state.exercises[exercise.exerciseId]?.timed ? (
+        <Grid item xs={2}>
+          {renderTextField(
+            exerciseIndex,
+            exercise.reps,
+            "Reps",
+            "reps",
+            groupIndex
+          )}
+        </Grid>
+      ) : (
+        <Grid item xs={2}>
+          {renderTextField(
+            exerciseIndex,
+            exercise.time,
+            "Time (s)",
+            "time",
+            groupIndex
+          )}
+        </Grid>
+      )}
+      <Grid item xs={isSuperset ? 4 : 3}>
+        {renderTextField(
+          exerciseIndex,
+          exercise.notes,
+          "Notes",
+          "notes",
+          groupIndex
+        )}
+      </Grid>
+      <Grid item xs={1}>
+        <IconButton
+          onClick={() =>
+            removeExercise(groupIndex, exerciseIndex, exercise.exerciseId)
+          }
+        >
+          <Delete />
+        </IconButton>
+      </Grid>
+    </React.Fragment>
+  );
+
+  const WorkoutGroup = ({ group, groupIndex }) => (
+    <Draggable
+      key={groupIndex}
+      draggableId={`${groupIndex}`}
+      index={groupIndex}
+    >
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+        >
+          <Grid
+            container
+            spacing={2}
+            alignItems="center"
+            className="grid-container"
+          >
+            <Grid item xs={3}>
+              {group.isSuperSet &&
+                renderTextField(groupIndex, group.number, "Sets", "number")}
+            </Grid>
+            <Grid item xs={9}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={group.isSuperSet}
+                    onChange={() => toggleSuperSet(groupIndex)}
+                    name="isSuperSet"
+                    color="primary"
+                  />
+                }
+                label="Make Super Set"
+              />
+            </Grid>
+
+            {group.sets.map((exercise, exerciseIndex) => (
+              <ExerciseItem
+                key={exerciseIndex}
+                group={group}
+                exercise={exercise}
+                groupIndex={groupIndex}
+                exerciseIndex={exerciseIndex}
+                isSuperset={group.isSuperSet}
+              />
+            ))}
+
+            {group.isSuperSet && (
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => {
+                    dispatch({ type: "TOGGLE_ADD_EXERCISE", payload: true });
+                    dispatch({ type: "SET_GROUP_INDEX", payload: groupIndex });
+                  }}
+                >
+                  Add Another Exercise to Super Set
+                </Button>
+              </Grid>
+            )}
+          </Grid>
+          <Divider style={{ margin: "20px 0" }} />
+        </div>
+      )}
+    </Draggable>
+  );
+
   if (state.loading) return <CircularProgress />;
 
   return (
@@ -457,182 +592,16 @@ const CreateWorkoutPlan = () => {
       <div>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="list">
-            {(provided) => (
+            {(provided, snapshot) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>
                 {state.setGroups.map((group, groupIndex) => (
-                  <Draggable
-                    key={`${groupIndex}`}
-                    draggableId={`${groupIndex}`}
-                    index={groupIndex}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <React.Fragment key={groupIndex}>
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            className="grid-container"
-                          >
-                            <Grid item xs={3}>
-                              {group.isSuperSet
-                                ? renderTextField(
-                                    groupIndex,
-                                    group.number,
-                                    "Sets",
-                                    "number"
-                                  )
-                                : null}
-                            </Grid>
-                            <Grid item xs={9}>
-                              <FormControlLabel
-                                control={
-                                  <Switch
-                                    checked={group.isSuperSet}
-                                    onChange={() => toggleSuperSet(groupIndex)}
-                                    name="isSuperSet"
-                                    color="primary"
-                                  />
-                                }
-                                label="Make Super Set"
-                              />
-                            </Grid>
-                            {group.sets.map((exercise, exerciseIndex) => (
-                              <React.Fragment key={exerciseIndex}>
-                                <Grid item xs={2}>
-                                  {state.exercises[exercise.exerciseId] && (
-                                    <img
-                                      src={`../${
-                                        state.exercises[exercise.exerciseId]
-                                          .imageUrl
-                                      }`}
-                                      alt={
-                                        state.exercises[exercise.exerciseId]
-                                          .name
-                                      }
-                                      style={{ width: "80%" }}
-                                    />
-                                  )}
-                                </Grid>
-                                {!group.isSuperSet ? (
-                                  <Grid item xs={2}>
-                                    <Typography>
-                                      {
-                                        state.exercises[exercise.exerciseId]
-                                          ?.name
-                                      }
-                                    </Typography>
-                                  </Grid>
-                                ) : (
-                                  <Grid item xs={3}>
-                                    <Typography>
-                                      {
-                                        state.exercises[exercise.exerciseId]
-                                          ?.name
-                                      }
-                                    </Typography>
-                                  </Grid>
-                                )}
-                                {!group.isSuperSet && (
-                                  <Grid item xs={2}>
-                                    {renderTextField(
-                                      exerciseIndex,
-                                      exercise.number,
-                                      "Sets",
-                                      "number",
-                                      groupIndex
-                                    )}
-                                  </Grid>
-                                )}
-                                {!state.exercises[exercise.exerciseId]
-                                  ?.timed ? (
-                                  <Grid item xs={2}>
-                                    {renderTextField(
-                                      exerciseIndex,
-                                      exercise.number,
-                                      "Reps",
-                                      "reps",
-                                      groupIndex
-                                    )}
-                                  </Grid>
-                                ) : (
-                                  <Grid item xs={2}>
-                                    {renderTextField(
-                                      exerciseIndex,
-                                      exercise.time,
-                                      "Time (s)",
-                                      "time",
-                                      groupIndex
-                                    )}
-                                  </Grid>
-                                )}
-                                {!group.isSuperSet ? (
-                                  <Grid item xs={3}>
-                                    {renderTextField(
-                                      exerciseIndex,
-                                      exercise.notes,
-                                      "Notes",
-                                      "notes",
-                                      groupIndex
-                                    )}
-                                  </Grid>
-                                ) : (
-                                  <Grid item xs={4}>
-                                    {renderTextField(
-                                      exerciseIndex,
-                                      exercise.notes,
-                                      "Notes",
-                                      "notes",
-                                      groupIndex
-                                    )}
-                                  </Grid>
-                                )}
-                                <Grid item xs={1}>
-                                  <IconButton
-                                    onClick={() =>
-                                      removeExercise(
-                                        groupIndex,
-                                        exerciseIndex,
-                                        exercise.exerciseId
-                                      )
-                                    }
-                                  >
-                                    <Delete />
-                                  </IconButton>
-                                </Grid>
-                              </React.Fragment>
-                            ))}
-                            {group.isSuperSet && (
-                              <Grid item xs={12}>
-                                <Button
-                                  variant="outlined"
-                                  color="primary"
-                                  onClick={() => {
-                                    dispatch({
-                                      type: "TOGGLE_ADD_EXERCISE",
-                                      payload: true,
-                                    });
-                                    dispatch({
-                                      type: "SET_GROUP_INDEX",
-                                      payload: groupIndex,
-                                    });
-                                  }}
-                                >
-                                  Add Another Exercise to Super Set
-                                </Button>
-                              </Grid>
-                            )}
-                          </Grid>
-                          <Divider style={{ margin: "20px 0" }} />
-                        </React.Fragment>
-                      </div>
-                    )}
-                  </Draggable>
+                  <WorkoutGroup
+                    key={groupIndex}
+                    group={group}
+                    groupIndex={groupIndex}
+                  />
                 ))}
+                {provided.placeholder}
               </div>
             )}
           </Droppable>
