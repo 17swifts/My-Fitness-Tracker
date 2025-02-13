@@ -48,6 +48,10 @@ const workoutReducer = (state, action) => {
       return { ...state, showTimer: action.payload };
     case "SET_TIME_SPENT":
       return { ...state, timeSpent: action.payload };
+    case "SET_CURRENT_GROUP":
+      return { ...state, currentGroupIndex: action.payload };
+    case "SET_CURRENT_EXERCISE":
+      return { ...state, currentExerciseIndex: action.payload };
     default:
       return state;
   }
@@ -70,9 +74,6 @@ const LogWorkout = () => {
     currentExerciseIndex: null,
   });
 
-  const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(null);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
   const [showTimer, setShowTimer] = useState(false);
 
   const fetchExerciseHistory = useCallback(
@@ -282,32 +283,37 @@ const LogWorkout = () => {
   };
 
   const swapExerciseFromLibrary = async (exercise) => {
-    if (currentGroupIndex === null || currentExerciseIndex === null) return;
+    if (state.currentGroupIndex === null || state.currentExerciseIndex === null)
+      return;
 
+    // Create a new copy of setGroups with updated exerciseId
+    const updatedSetGroups = state.workoutPlan.setGroups.map(
+      (group, groupIndex) =>
+        groupIndex === state.currentGroupIndex
+          ? {
+              ...group,
+              sets: group.sets.map((set, setIndex) =>
+                setIndex === state.currentExerciseIndex
+                  ? { ...set, exerciseId: exercise.id }
+                  : set
+              ),
+            }
+          : group
+    );
+
+    // Dispatch updated workout plan
     dispatch({
       type: "SET_WORKOUT_PLAN",
-      payload: {
-        ...state.workoutPlan,
-        setGroups: state.workoutPlan.setGroups.map((group, groupIndex) =>
-          groupIndex === currentGroupIndex
-            ? {
-                ...group,
-                sets: group.sets.map((set, setIndex) =>
-                  setIndex === currentExerciseIndex
-                    ? { ...set, exerciseId: exercise.id }
-                    : set
-                ),
-              }
-            : group
-        ),
-      },
+      payload: { ...state.workoutPlan, setGroups: updatedSetGroups },
     });
 
+    // Fetch new exercise details for the swapped exercise
     await fetchExerciseDetails(state.workoutPlan);
 
+    // Reset state after swapping
     dispatch({ type: "SET_MODAL", payload: false });
-    setCurrentGroupIndex(null);
-    setCurrentExerciseIndex(null);
+    dispatch({ type: "SET_CURRENT_GROUP", payload: null });
+    dispatch({ type: "SET_CURRENT_EXERCISE", payload: null });
   };
 
   const handleCancel = () => {
@@ -358,6 +364,185 @@ const LogWorkout = () => {
     );
   };
 
+  const SetItem = ({
+    exerciseId,
+    setIndex,
+    reps,
+    time,
+    notes,
+    timed,
+    hasWeight,
+    handleExerciseSwap,
+    isSuperset,
+  }) => {
+    const exercise = state.exercises[exerciseId];
+    return (
+      <Box mb={2}>
+        <Typography>{`${timed ? `${time}s` : `${reps} reps`} ${
+          notes ? `- ${notes}` : ""
+        }`}</Typography>
+        <Grid container spacing={1} alignItems="center" justifyContent="left">
+          <Grid item xs={1}>
+            {isSuperset ? (
+              <Link href={`/exercise/${exerciseId}`}>
+                <img
+                  src={`../${exercise?.imageUrl}`}
+                  alt={exercise?.name}
+                  style={{ width: "100%" }}
+                />
+              </Link>
+            ) : (
+              <Typography>{`Set ${setIndex + 1}`}</Typography>
+            )}
+          </Grid>
+          <Grid item xs={2}>
+            {!timed
+              ? renderTextField(
+                  exerciseId,
+                  setIndex + 1,
+                  state.completedWorkout[exerciseId]?.[setIndex + 1]?.reps,
+                  "Reps",
+                  "reps"
+                )
+              : renderTextField(
+                  exerciseId,
+                  setIndex + 1,
+                  state.completedWorkout[exerciseId]?.[setIndex + 1]?.time,
+                  "Time (s)",
+                  "time"
+                )}
+          </Grid>
+          <Grid item xs={2}>
+            {hasWeight &&
+              renderTextField(
+                exerciseId,
+                setIndex + 1,
+                state.completedWorkout[exerciseId]?.[setIndex + 1]?.weight,
+                "Weight (kg)",
+                "weight"
+              )}
+          </Grid>
+          <Grid item xs={5}></Grid>
+          <Grid item xs={1}>
+            {renderHistoricalData(exerciseId, reps, setIndex + 1)}
+          </Grid>
+          <Grid item>
+            <IconButton
+              onClick={() => handleExerciseSwap(exerciseId, setIndex)}
+            >
+              <SwapHoriz />
+            </IconButton>
+          </Grid>
+        </Grid>
+        <Divider />
+      </Box>
+    );
+  };
+
+  const ExerciseGroup = ({ group, handleExerciseSwap }) => {
+    const exercise = state.exercises[group.sets[0].exerciseId];
+
+    return (
+      <Box mb={2}>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={1}>
+            <Link href={`/exercise/${group.sets[0].exerciseId}`}>
+              <img
+                src={`../${exercise?.imageUrl}`}
+                alt={exercise?.name}
+                style={{ width: "100%" }}
+              />
+            </Link>
+          </Grid>
+          <Grid item xs={9}>
+            <Typography variant="h7" gutterBottom>
+              {exercise?.name}
+            </Typography>
+            <Typography variant="subtitle1">
+              {group.sets[0].number} sets x{" "}
+              {exercise?.timed ? `${group.sets[0].time}s` : group.sets[0].reps}
+              {group.sets[0].notes ? ` - ${group.sets[0].notes}` : ""}
+            </Typography>
+          </Grid>
+        </Grid>
+        {Array.from({ length: group.sets[0].number }).map((_, setIndex) => (
+          <SetItem
+            key={`${group.sets[0].exerciseId}-${setIndex}`}
+            exerciseId={group.sets[0].exerciseId}
+            setIndex={setIndex}
+            reps={group.sets[0].reps}
+            time={group.sets[0].time}
+            notes={group.sets[0].notes}
+            timed={exercise?.timed}
+            hasWeight={exercise?.hasWeight}
+            handleExerciseSwap={handleExerciseSwap}
+            isSuperset={false}
+          />
+        ))}
+      </Box>
+    );
+  };
+
+  const SupersetGroup = ({ group, index, handleExerciseSwap }) => {
+    const color = group.isSuperSet ? getColorForSuperset(index) : "#000";
+    return (
+      <Box display="flex" flexDirection="column" position="relative">
+        <Typography
+          variant="h5"
+          style={{ color, marginLeft: "16px", fontWeight: "bold" }}
+        >
+          Superset of {group.number} sets
+        </Typography>
+        <Divider
+          orientation="vertical"
+          flexItem
+          sx={{
+            backgroundColor: color,
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: "4px",
+            marginLeft: "-20px",
+          }}
+        />
+        {Array.from({ length: group.number }).map((_, setIndex) => (
+          <React.Fragment key={setIndex}>
+            <Typography variant="h6">{`Set ${setIndex + 1}`}</Typography>
+            {group.sets.map((set) => (
+              <SetItem
+                key={`${set.exerciseId}-${setIndex}`}
+                exerciseId={set.exerciseId}
+                setIndex={setIndex}
+                reps={set.reps}
+                time={set.time}
+                notes={set.notes}
+                timed={state.exercises[set.exerciseId]?.timed}
+                hasWeight={state.exercises[set.exerciseId]?.hasWeight}
+                handleExerciseSwap={handleExerciseSwap}
+                isSuperset={true}
+              />
+            ))}
+            <Box mb={3}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={1}>
+                  <img
+                    src="../assets/rest.png"
+                    alt="rest"
+                    style={{ width: "70%" }}
+                  />
+                </Grid>
+                <Grid item xs={9}>
+                  <Typography>Rest for 90s</Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          </React.Fragment>
+        ))}
+      </Box>
+    );
+  };
+
   if (state.loading) return <CircularProgress />;
 
   return (
@@ -389,7 +574,10 @@ const LogWorkout = () => {
         {showTimer && <Timer onClose={handleTimerClose} />}
       </Box>
 
-      <Modal open={isAddingExercise} onClose={() => setIsAddingExercise(false)}>
+      <Modal
+        open={state.modalOpen}
+        onClose={() => dispatch({ type: "SET_MODAL", payload: false })}
+      >
         <Box
           sx={{
             position: "absolute",
@@ -406,7 +594,7 @@ const LogWorkout = () => {
         >
           <ExerciseLibrary
             onSelectExercise={swapExerciseFromLibrary}
-            onClose={() => setIsAddingExercise(false)}
+            onClose={() => dispatch({ type: "SET_MODAL", payload: false })}
           />
         </Box>
       </Modal>
@@ -425,273 +613,30 @@ const LogWorkout = () => {
       )}
 
       <List>
-        {state.workoutPlan.setGroups.map((group, index) => {
-          const color = group.isSuperSet ? getColorForSuperset(index) : "#000";
-          return (
-            <React.Fragment key={index}>
-              {group.isSuperSet && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    position: "relative",
-                  }}
-                >
-                  <Typography
-                    variant="h5"
-                    style={{ color, marginLeft: "16px", fontWeight: "bold" }}
-                  >
-                    Superset of {group.number} sets
-                  </Typography>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{
-                      backgroundColor: color,
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: "4px",
-                      marginLeft: "-20px",
-                    }}
-                  />
-                  {Array.apply(null, { length: group.number }).map((_e, i) => (
-                    <React.Fragment key={i}>
-                      <Typography variant="h6">{`Set ${i + 1}`}</Typography>
-                      {group.sets.map((set) => (
-                        <Box key={`${set.exerciseId}-${i}`} mb={2}>
-                          <Typography>
-                            {state.exercises[set.exerciseId]?.name}
-                          </Typography>
-                          {!state.exercises[set.exerciseId]?.timed ? (
-                            <Typography>
-                              {set.reps} reps{" "}
-                              {set.notes ? ` - ${set.notes}` : ""}
-                            </Typography>
-                          ) : (
-                            <Typography>
-                              {set.reps} x {set.time}s
-                              {set.notes ? ` - ${set.notes}` : ""}
-                            </Typography>
-                          )}
-                          <Grid
-                            container
-                            spacing={1}
-                            alignItems="center"
-                            justifyContent="left"
-                          >
-                            <Grid item xs={1}>
-                              <Link href={`/exercise/${set.exerciseId}`}>
-                                <img
-                                  src={`../${
-                                    state.exercises[set.exerciseId]?.imageUrl
-                                  }`}
-                                  alt={state.exercises[set.exerciseId]?.name}
-                                  style={{ width: "100%" }}
-                                />
-                              </Link>
-                            </Grid>
-                            {!state.exercises[set.exerciseId]?.timed ? (
-                              <Grid item xs={2}>
-                                {renderTextField(
-                                  set.exerciseId,
-                                  i + 1,
-                                  state.completedWorkout[set.exerciseId]?.[
-                                    i + 1
-                                  ]?.reps,
-                                  "Reps",
-                                  "reps"
-                                )}
-                              </Grid>
-                            ) : (
-                              <Grid item xs={2}>
-                                {renderTextField(
-                                  set.exerciseId,
-                                  i + 1,
-                                  state.completedWorkout[set.exerciseId]?.[
-                                    i + 1
-                                  ]?.time,
-                                  "Time (s)",
-                                  "time"
-                                )}
-                              </Grid>
-                            )}
-                            <Grid item xs={2}>
-                              {state.exercises[set.exerciseId]?.hasWeight &&
-                                renderTextField(
-                                  set.exerciseId,
-                                  i + 1,
-                                  state.completedWorkout[set.exerciseId]?.[
-                                    i + 1
-                                  ]?.weight,
-                                  "Weight (kg)",
-                                  "weight"
-                                )}
-                            </Grid>
-                            <Grid item xs={5}></Grid>
-                            <Grid item xs={1}>
-                              {renderHistoricalData(
-                                set.exerciseId,
-                                set.reps,
-                                i + 1
-                              )}
-                            </Grid>
-                            <Grid item>
-                              <IconButton
-                                onClick={() => {
-                                  setIsAddingExercise(true);
-                                  setCurrentGroupIndex(index);
-                                  setCurrentExerciseIndex(i);
-                                }}
-                              >
-                                <SwapHoriz />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
-                          <Divider />
-                        </Box>
-                      ))}
-                      <Box key={`rest-${i}`} mb={3}>
-                        <Grid
-                          container
-                          spacing={2}
-                          alignItems="center"
-                          justifyContent="left"
-                        >
-                          <Grid item xs={1}>
-                            <img
-                              src="../assets/rest.png"
-                              alt="rest"
-                              style={{ width: "70%" }}
-                            />
-                          </Grid>
-                          <Grid item xs={9}>
-                            <Typography>Rest for 90s</Typography>
-                          </Grid>
-                        </Grid>
-                      </Box>
-                    </React.Fragment>
-                  ))}
-                </Box>
-              )}
-              {!group.isSuperSet && (
-                <Box key={index} mb={2}>
-                  <Grid
-                    container
-                    spacing={3}
-                    alignItems="center"
-                    justifyContent="left"
-                  >
-                    <Grid item xs={1}>
-                      <Link href={`/exercise/${group.sets[0].exerciseId}`}>
-                        <img
-                          src={`../${
-                            state.exercises[group.sets[0].exerciseId]?.imageUrl
-                          }`}
-                          alt={state.exercises[group.sets[0].exerciseId]?.name}
-                          style={{ width: "100%" }}
-                        />
-                      </Link>
-                    </Grid>
-                    <Grid item xs={9}>
-                      <Typography variant="h7" gutterBottom>
-                        {state.exercises[group.sets[0].exerciseId]?.name}
-                      </Typography>
-                      {!state.exercises[group.sets[0].exerciseId]?.timed ? (
-                        <Typography variant="subtitle1">
-                          {group.sets[0].number} sets x {group.sets[0].reps}
-                          {group.sets[0].notes
-                            ? ` - ${group.sets[0].notes}`
-                            : ""}
-                        </Typography>
-                      ) : (
-                        <Typography variant="subtitle1">
-                          {group.sets[0].number} sets x {group.sets[0].time}s
-                          {group.sets[0].notes
-                            ? ` - ${group.sets[0].notes}`
-                            : ""}
-                        </Typography>
-                      )}
-                    </Grid>
-                  </Grid>
-                  {Array.apply(null, { length: group.sets[0].number }).map(
-                    (_e, i) => (
-                      <Box key={`${group.sets[0].exerciseId}-${i}`} mb={2}>
-                        <Grid
-                          container
-                          spacing={1}
-                          alignItems="center"
-                          justifyContent="left"
-                        >
-                          <Grid item xs={1}>
-                            <Typography variant="subtitle1">{`Set ${
-                              i + 1
-                            }`}</Typography>
-                          </Grid>
-                          <Grid item xs={2}>
-                            {!state.exercises[group.sets[0].exerciseId]?.timed
-                              ? renderTextField(
-                                  group.sets[0].exerciseId,
-                                  i + 1,
-                                  state.completedWorkout[
-                                    group.sets[0].exerciseId
-                                  ]?.[i + 1]?.reps,
-                                  "Reps",
-                                  "reps"
-                                )
-                              : renderTextField(
-                                  group.sets[0].exerciseId,
-                                  i + 1,
-                                  state.completedWorkout[
-                                    group.sets[0].exerciseId
-                                  ]?.[i + 1]?.time,
-                                  "Time (s)",
-                                  "time"
-                                )}
-                          </Grid>
-                          <Grid item xs={2}>
-                            {state.exercises[group.sets[0].exerciseId]
-                              ?.hasWeight &&
-                              renderTextField(
-                                group.sets[0].exerciseId,
-                                i + 1,
-                                state.completedWorkout[
-                                  group.sets[0].exerciseId
-                                ]?.[i + 1]?.weight,
-                                "Weight (kg)",
-                                "weight"
-                              )}
-                          </Grid>
-                          <Grid item xs={5}></Grid>
-                          <Grid item xs={1}>
-                            {renderHistoricalData(
-                              group.sets[0].exerciseId,
-                              group.sets[0].reps,
-                              i + 1
-                            )}
-                          </Grid>
-                          <Grid item xs={1}>
-                            <IconButton
-                              onClick={() => {
-                                setIsAddingExercise(true);
-                                setCurrentGroupIndex(index);
-                                setCurrentExerciseIndex(i);
-                              }}
-                            >
-                              <SwapHoriz />
-                            </IconButton>
-                          </Grid>
-                        </Grid>
-                        <Divider />
-                      </Box>
-                    )
-                  )}
-                </Box>
-              )}
-            </React.Fragment>
-          );
-        })}
+        {state.workoutPlan.setGroups.map((group, index) =>
+          group.isSuperSet ? (
+            <SupersetGroup
+              key={index}
+              group={group}
+              index={index}
+              handleExerciseSwap={(setIndex) => {
+                dispatch({ type: "SET_MODAL", payload: true });
+                dispatch({ type: "SET_CURRENT_GROUP", payload: index });
+                dispatch({ type: "SET_CURRENT_EXERCISE", payload: setIndex });
+              }}
+            />
+          ) : (
+            <ExerciseGroup
+              key={index}
+              group={group}
+              handleExerciseSwap={(setIndex) => {
+                dispatch({ type: "SET_MODAL", payload: true });
+                dispatch({ type: "SET_CURRENT_GROUP", payload: index });
+                dispatch({ type: "SET_CURRENT_EXERCISE", payload: setIndex });
+              }}
+            />
+          )
+        )}
       </List>
     </Box>
   );

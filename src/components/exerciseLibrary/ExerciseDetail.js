@@ -1,15 +1,13 @@
 import React, { useEffect, useReducer } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import {
   Box,
   Typography,
-  IconButton,
   Divider,
   Grid,
   CircularProgress,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { firestore, auth } from "../../firebase";
 import {
   doc,
@@ -38,7 +36,6 @@ const exerciseReducer = (state, action) => {
 
 const ExerciseDetail = () => {
   const { exerciseId } = useParams();
-  const navigate = useNavigate();
 
   // Manage state using useReducer
   const [state, dispatch] = useReducer(exerciseReducer, {
@@ -164,13 +161,6 @@ const ExerciseDetail = () => {
 
   return (
     <Box sx={{ width: "100%", padding: 2, position: "relative" }}>
-      <IconButton
-        onClick={() => navigate(-1)}
-        sx={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
-      >
-        <ArrowBackIcon />
-      </IconButton>
-
       <Box
         sx={{
           position: "sticky",

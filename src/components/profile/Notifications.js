@@ -6,14 +6,11 @@ import {
   Switch,
   Typography,
   CircularProgress,
-  IconButton,
   Card,
   CardContent,
   Divider,
 } from "@mui/material";
 import { auth, firestore } from "../../firebase";
-import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const notificationsReducer = (state, action) => {
   switch (action.type) {
@@ -34,8 +31,6 @@ const notificationsReducer = (state, action) => {
 };
 
 const Notifications = () => {
-  const navigate = useNavigate();
-
   const [state, dispatch] = useReducer(notificationsReducer, {
     notifications: { email: false, push: false },
     loading: true,
@@ -97,10 +92,6 @@ const Notifications = () => {
 
   return (
     <Box p={3} maxWidth={500} mx="auto">
-      <IconButton className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </IconButton>
-
       <Typography variant="h5" gutterBottom>
         Notification Settings
       </Typography>

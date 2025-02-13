@@ -11,7 +11,6 @@ import {
   Grid,
   Link,
   Modal,
-  IconButton,
   ListItemIcon,
   Dialog,
   DialogActions,
@@ -19,7 +18,6 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import { firestore } from "../firebase";
@@ -159,18 +157,6 @@ const WorkoutPlanDetail = () => {
 
   return (
     <Box p={3} className="workout-detail-container">
-      <IconButton
-        className="back-button"
-        onClick={() => navigate(-1)}
-        sx={{
-          position: "absolute",
-          top: "85px",
-          left: "320px",
-          zIndex: "1000",
-        }}
-      >
-        <ArrowBackIcon />
-      </IconButton>
       <Typography variant="h4" gutterBottom>
         {workoutPlan.name}
       </Typography>

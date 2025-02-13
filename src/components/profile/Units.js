@@ -8,17 +8,13 @@ import {
   Radio,
   Typography,
   CircularProgress,
-  IconButton,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { auth, firestore } from "../../firebase";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const Units = () => {
   const [units, setUnits] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUnits = async () => {
@@ -68,9 +64,6 @@ const Units = () => {
 
   return (
     <Box p={3}>
-      <IconButton className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </IconButton>
       <Typography variant="h5" gutterBottom>
         Units of Measurement
       </Typography>
