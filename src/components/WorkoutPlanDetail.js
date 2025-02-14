@@ -23,7 +23,7 @@ import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import { firestore } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Equipment from "./common/Equipment";
-import ScheduleWorkout from "./ScheduleWorkout";
+import ScheduleWorkout from "./calendar/ScheduleWorkout";
 import "./styles/WorkoutPlanDetail.css";
 
 const WorkoutPlanDetail = () => {

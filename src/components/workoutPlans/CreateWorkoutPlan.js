@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, firestore } from "../firebase";
+import { auth, firestore } from "../../firebase";
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import {
   Button,
@@ -16,10 +16,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
+import ExerciseLibrary from "../exerciseLibrary/ExerciseLibrary";
 import { Delete } from "@mui/icons-material";
 import dayjs from "dayjs";
-import "./styles/CreateWorkoutPlan.css";
+import "../styles/CreateWorkoutPlan.css";
+import SaveWorkoutModal from "./SaveWorkoutModal";
 
 // Initial state for reducer
 const initialState = {
@@ -547,47 +548,11 @@ const CreateWorkoutPlan = () => {
       </Modal>
 
       {/* Modal for Save as New or Edit Existing */}
-      <Modal open={state.showSaveModal} onClose={handleModalClose}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "80%",
-            height: "80%",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            overflowY: "auto",
-            p: 4,
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Do you want to save this workout as a new workout or update the
-            existing one?
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              confirmSaveOption(false);
-              handleModalClose();
-            }}
-          >
-            Update Existing
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => {
-              confirmSaveOption(true);
-              handleModalClose();
-            }}
-          >
-            Save as New
-          </Button>
-        </Box>
-      </Modal>
+      <SaveWorkoutModal
+        open={state.showSaveModal}
+        onClose={handleModalClose}
+        onSave={confirmSaveOption}
+      />
 
       <div>
         <DragDropContext onDragEnd={onDragEnd}>

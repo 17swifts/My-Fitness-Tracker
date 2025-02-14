@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer } from "react";
-import { auth, firestore } from "../firebase";
+import { auth, firestore } from "../../firebase";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import {
   Box,

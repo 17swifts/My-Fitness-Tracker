@@ -14,7 +14,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
-import { firestore, auth } from "../firebase";
+import { firestore, auth } from "../../firebase";
 import {
   doc,
   getDoc,
@@ -27,8 +27,8 @@ import {
 } from "firebase/firestore";
 import dayjs from "dayjs";
 import TimerIcon from "@mui/icons-material/Timer";
-import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
-import Timer from "./common/Timer";
+import ExerciseLibrary from "../exerciseLibrary/ExerciseLibrary";
+import Timer from "../common/Timer";
 
 const workoutReducer = (state, action) => {
   switch (action.type) {

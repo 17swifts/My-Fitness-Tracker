@@ -20,9 +20,9 @@ import {
 
 import SignUp from "./components/SignUp";
 import Profile from "./components/profile/Profile";
-import CreateWorkoutPlan from "./components/CreateWorkoutPlan";
+import CreateWorkoutPlan from "./components/workoutPlans/CreateWorkoutPlan";
 import ExerciseLibrary from "./components/exerciseLibrary/ExerciseLibrary";
-import LogWorkout from "./components/LogWorkout";
+import LogWorkout from "./components/workoutPlans/LogWorkout";
 import Statistics from "./components/statistics/Statistics";
 import DashboardPage from "./components/dashboard/DashboardPage";
 import CalendarView from "./components/calendar/CalendarView";
@@ -34,7 +34,7 @@ import Units from "./components/profile/Units";
 import UpdateProfile from "./components/profile/UpdateProfile";
 import FitbitConnect from "./components/profile/FitbitConnect";
 import GenerateWorkoutPlan from "./components/GenerateWorkoutPlan";
-import LogExercise from "./components/LogExercise";
+import LogExercise from "./components/workoutPlans/LogExercise";
 import Notifications from "./components/profile/Notifications";
 
 const App = () => {

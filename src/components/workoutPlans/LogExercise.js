@@ -13,9 +13,9 @@ import {
   DialogContentText,
 } from "@mui/material";
 import { collection, addDoc } from "firebase/firestore";
-import { auth, firestore } from "../firebase";
+import { auth, firestore } from "../../firebase";
 import { useNavigate } from "react-router-dom";
-import ExerciseLibrary from "./exerciseLibrary/ExerciseLibrary";
+import ExerciseLibrary from "../exerciseLibrary/ExerciseLibrary";
 
 // Reducer to manage exercise data
 const exerciseReducer = (state, action) => {

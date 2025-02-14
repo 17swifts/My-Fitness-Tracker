@@ -21,13 +21,23 @@ const SaveWorkoutModal = ({ open, onClose, onSave }) => (
         Do you want to save this workout as a new plan or update the existing
         one?
       </Typography>
-      <Button variant="contained" color="primary" onClick={() => onSave(false)}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => {
+          onSave(false);
+          onClose();
+        }}
+      >
         Update Existing
       </Button>
       <Button
         variant="contained"
         color="secondary"
-        onClick={() => onSave(true)}
+        onClick={() => {
+          onSave(true);
+          onClose();
+        }}
       >
         Save as New
       </Button>
